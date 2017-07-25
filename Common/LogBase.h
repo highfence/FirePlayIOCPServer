@@ -37,23 +37,23 @@ namespace FirePlayCommon
 			switch (type)
 			{
 			case LogType::LOG_INFO :
-				Info(logText);
+				info(logText);
 				break;
 
 			case LogType::LOG_ERROR :
-				Error(logText);
+				error(logText);
 				break;
 
 			case LogType::LOG_WARN :
-				Warn(logText);
+				warn(logText);
 				break;
 
 			case LogType::LOG_DEBUG :
-				Debug(logText);
+				debug(logText);
 				break;
 
 			case LogType::LOG_TRACE :
-				Info(logText);
+				info(logText);
 				break;
 
 			default:
@@ -74,11 +74,11 @@ namespace FirePlayCommon
 
 		std::mutex _lock;
 
-		virtual void Error(const char * pText) = 0;
-		virtual void Warn(const char * pText) = 0;
-		virtual void Debug(const char * pText) = 0;
-		virtual void Trace(const char * pText) = 0;
-		virtual void Info(const char * pText) = 0;
+		virtual void error(const char * pText) = 0;
+		virtual void warn(const char * pText) = 0;
+		virtual void debug(const char * pText) = 0;
+		virtual void trace(const char * pText) = 0;
+		virtual void info(const char * pText) = 0;
 
 		void consoleOutWithColor(const ConsoleColor color, const char * logText)
 		{
