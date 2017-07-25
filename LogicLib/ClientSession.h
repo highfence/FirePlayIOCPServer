@@ -4,8 +4,12 @@ namespace FirePlayLogic
 {
 	class ClientSession
 	{
-	public:
+	public :
+
 		ClientSession();
 		~ClientSession();
+
+	private :
+
 	};
 }

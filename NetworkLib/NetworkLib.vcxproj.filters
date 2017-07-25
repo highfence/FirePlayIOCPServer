@@ -18,13 +18,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NetworkBase.h">
-      <Filter>소스 파일</Filter>
+    <ClInclude Include="IOCPNetwork.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NetworkBase.cpp">
-      <Filter>헤더 파일</Filter>
+    <ClCompile Include="IOCPNetwork.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

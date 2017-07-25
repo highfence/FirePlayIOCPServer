@@ -142,10 +142,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NetworkBase.h" />
+    <ClInclude Include="IOCPNetwork.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NetworkBase.cpp" />
+    <ClCompile Include="IOCPNetwork.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
