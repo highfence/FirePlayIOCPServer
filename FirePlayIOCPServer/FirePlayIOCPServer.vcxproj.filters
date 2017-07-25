@@ -36,5 +36,13 @@
     <ClInclude Include="..\Common\ConsoleLogger.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\Define.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Common\ServerMain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
