@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="..\Common\conmanip.h" />
     <ClInclude Include="..\Common\ErrorCode.h" />
+    <ClInclude Include="..\Common\LogBase.h" />
     <ClInclude Include="..\Common\Packet.h" />
     <ClInclude Include="..\Common\PacketID.h" />
   </ItemGroup>

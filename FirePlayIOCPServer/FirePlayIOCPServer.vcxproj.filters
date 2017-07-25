@@ -30,5 +30,8 @@
     <ClInclude Include="..\Common\PacketID.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\LogBase.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
