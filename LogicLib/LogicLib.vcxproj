@@ -146,6 +146,12 @@
       <Project>{79678c0a-4762-4270-8186-ecc59143fc2e}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ClientSession.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ClientSession.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

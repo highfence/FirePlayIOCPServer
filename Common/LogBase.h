@@ -63,7 +63,7 @@ namespace FirePlayCommon
 
 	protected :
 
-		enum class ConsoleColor : int
+		enum class ConsoleColor : WORD 
 		{
 			GREEN  = 2,
 			BLUE   = 9,
@@ -80,11 +80,11 @@ namespace FirePlayCommon
 		virtual void trace(const char * pText) = 0;
 		virtual void info(const char * pText) = 0;
 
-		void consoleOutWithColor(const ConsoleColor color, const char * logText)
+		void consoleOutWithColor(const ConsoleColor color, const char* logHead, const char * logText)
 		{
 			std::lock_guard<std::mutex> _writeLock(_lock);
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (int)color);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (WORD)color);
 			std::cout << logText << std::endl;
 		}
 	};

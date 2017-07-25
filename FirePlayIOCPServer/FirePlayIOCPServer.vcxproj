@@ -158,6 +158,9 @@
     <ClInclude Include="..\Common\Packet.h" />
     <ClInclude Include="..\Common\PacketID.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Common\ServerMain.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
