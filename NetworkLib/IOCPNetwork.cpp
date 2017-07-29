@@ -13,8 +13,6 @@ namespace FirePlayNetwork
 	{
 		_logger = logger;
 		memcpy_s(_serverInfo, sizeof(ServerInfo), serverInfo, sizeof(ServerInfo));
-
-
 	}
 
 	void IOCPNetwork::Init()
@@ -68,8 +66,8 @@ namespace FirePlayNetwork
 
 		auto createListenSocket = [this]() -> bool
 		{
-			_listenSock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-			if (_listenSock == INVALID_SOCKET)
+			_serverSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+			if (_serverSocket == INVALID_SOCKET)
 			{
 				_logger->Write(LogType::LOG_ERROR, "%s | Listen Socket Initialize Failed", __FUNCTION__);
 				return false;
@@ -79,7 +77,19 @@ namespace FirePlayNetwork
 
 		auto bindSocket = [this]() -> bool
 		{
+			SOCKADDR_IN socketAddr;
+			ZeroMemory(&socketAddr, sizeof(socketAddr));
+			socketAddr.sin_family = AF_INET;
+			socketAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+			socketAddr.sin_port = htons(_serverInfo->Port);
 
+			auto retval = bind(_serverSocket, (sockaddr*)&socketAddr, sizeof(socketAddr));
+			if (retval != 0)
+			{
+				_logger->Write(LogType::LOG_ERROR, "%s | Socket Address Bind Failed", __FUNCTION__);
+				return false;
+			}
+			return true;
 		};
 
 #pragma endregion

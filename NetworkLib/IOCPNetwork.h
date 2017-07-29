@@ -27,8 +27,10 @@ namespace FirePlayNetwork
 		~IOCPNetwork() {};
 
 		void Init();
-		HANDLE GetIocpHandle() const { return _iocpHandle; };
 		void Stop();
+
+		// Getter, Setter
+		HANDLE GetIocpHandle() const { return _iocpHandle; };
 
 	private :
 
@@ -39,7 +41,7 @@ namespace FirePlayNetwork
 
 	private :
 
-		SOCKET _listenSock = INVALID_SOCKET;
+		SOCKET _serverSocket = INVALID_SOCKET;
 		HANDLE _iocpHandle = INVALID_HANDLE_VALUE;
 		ConsoleLogger * _logger = nullptr;
 		ServerInfo * _serverInfo = nullptr;
