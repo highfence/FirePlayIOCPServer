@@ -36,7 +36,6 @@ namespace FirePlayNetwork
 			PacketQueue      * recvPacketQueue,
 			PacketQueue      * sendPacketQueue);
 		void Stop();
-		void Run();
 
 		// Getter, Setter
 		HANDLE GetIocpHandle() const { return _iocpHandle; };

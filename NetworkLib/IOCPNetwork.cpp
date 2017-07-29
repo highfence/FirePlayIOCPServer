@@ -23,6 +23,11 @@ namespace FirePlayNetwork
 		PacketQueue      * recvPacketQueue,
 		PacketQueue      * sendPacketQueue)
 	{
+		if (logger == nullptr || recvPacketQueue == nullptr || sendPacketQueue == nullptr)
+		{
+			return;
+		}
+
 		_logger = logger;
 		_recvPacketQueue = recvPacketQueue;
 		_sendPacketQueue = sendPacketQueue;
@@ -31,6 +36,7 @@ namespace FirePlayNetwork
 		_sessionPool.Init(_serverInfo->Backlog);
 		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port -> %d, Backlog -> %d", _serverInfo->Port, _serverInfo->Backlog);
 
+		// 네트워크단을 세팅한다.
 		if (!initNetwork())
 		{
 			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network initialize failed", __FUNCTION__);
@@ -39,6 +45,17 @@ namespace FirePlayNetwork
 		else
 		{
 			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network initialize success", __FUNCTION__);
+		}	
+
+		// 쓰레드들을 활성화해준다.
+		if (!startServer())
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network start failed", __FUNCTION__);
+			return;
+		}
+		else
+		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
 		}
 	}
 
@@ -52,19 +69,6 @@ namespace FirePlayNetwork
 		else
 		{
 			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network end success", __FUNCTION__);
-		}
-	}
-
-	void IOCPNetwork::Run()
-	{
-		if (!startServer())
-		{
-			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network start failed", __FUNCTION__);
-			return;
-		}
-		else
-		{
-			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
 		}
 	}
 
