@@ -11,6 +11,7 @@
 #include "../Common/Packet.h"
 #include "SessionInfo.h"
 #include "PacketQueue.h"
+#include "ServerNetErrorCode.h"
 
 using PktHeader = FirePlayCommon::PktHeader;
 
@@ -211,7 +212,12 @@ namespace FirePlayNetwork
 				{
 					session.Clear();
 					_sessionPool.ReleaseTag(sessionTag);
-					// TODO :: 사용자 종료 패킷 조제후 패킷 큐에 넣어주기.
+
+					RecvPacketInfo closeSessionInfo;
+					closeSessionInfo.PacketId = (short)PACKET_ID::NTF_SYS_CLOSE_SESSION;
+					closeSessionInfo.SessionIndex = sessionTag;
+					_recvPacketQueue.Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
+
 					_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
 					continue;
 				}

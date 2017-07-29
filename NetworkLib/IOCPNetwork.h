@@ -60,4 +60,9 @@ namespace FirePlayNetwork
 		PacketQueue _recvPacketQueue;
 		PacketQueue _sendPacketQueue;
 	};
+
+	static class Factory
+	{
+
+	};
 }
