@@ -8,6 +8,7 @@
 
 #include "../Common/ObjectPool.h"
 #include "SessionInfo.h"
+#include "PacketQueue.h"
 
 namespace FirePlayCommon
 {
@@ -56,5 +57,6 @@ namespace FirePlayNetwork
 
 		using SessionPool = FirePlayCommon::ObjectPool<SessionInfo>;
 		SessionPool _sessionPool;
+		PacketQueue _packetQueue;
 	};
 }

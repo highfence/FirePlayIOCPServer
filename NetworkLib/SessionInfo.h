@@ -51,11 +51,22 @@ namespace FirePlayNetwork
 		int       _sendSize = 0;
 	};
 
-	struct RecvPacketInfo
+	class RecvPacketInfo
 	{
+	public :
+
+		RecvPacketInfo() {};
+		~RecvPacketInfo() 
+		{
+			if (pData != nullptr)
+			{
+				delete[] pData;
+			}
+		};
+
 		int SessionIndex = 0;
 		short PacketId = 0;
 		short PacketBodySize = 0;
-		char * pData = 0;
+		char * pData = nullptr;
 	};
 }

@@ -7,6 +7,7 @@
 #include "../Common/ConsoleLogger.h"
 #include "../Common/Define.h"
 #include "SessionInfo.h"
+#include "PacketQueue.h"
 
 namespace FirePlayNetwork
 {
@@ -15,6 +16,7 @@ namespace FirePlayNetwork
 		_logger = logger;
 		memcpy_s(_serverInfo, sizeof(ServerInfo), serverInfo, sizeof(ServerInfo));
 		_sessionPool.Init(_serverInfo->Backlog);
+		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port -> %d, Backlog -> %d", _serverInfo->Port, _serverInfo->Backlog);
 	}
 
 	void IOCPNetwork::Init()
@@ -180,7 +182,35 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::workingThreadFunc()
 	{
+		DWORD transferredByte = 0;
+		IOCPInfo * iocpInfo   = nullptr;
+		SessionInfo * session = nullptr;
 
+		while (true)
+		{
+			auto retval = GetQueuedCompletionStatus(_iocpHandle, &transferredByte, (PULONG_PTR)&session, (LPOVERLAPPED*)&iocpInfo, INFINITE);
+			if (retval == FALSE)
+			{
+				_logger->Write(LogType::LOG_ERROR, "%s | Iocp GetQueuedCompletionStatus Failed", __FUNCTION__);
+				continue;
+			}
+
+			auto sessionTag = iocpInfo->SessionTag;
+			SessionInfo session = _sessionPool[sessionTag];
+
+			// 종료 검사.
+			if (transferredByte == 0)
+			{
+				session.Clear();
+				_sessionPool.ReleaseTag(sessionTag);
+				// TODO :: 사용자 종료 패킷 조제후 패킷 큐에 넣어주기.
+				_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
+				continue;
+			}
+
+			
+
+		}
 	}
 
 	void IOCPNetwork::listenThreadFunc()
