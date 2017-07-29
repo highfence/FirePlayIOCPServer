@@ -17,16 +17,20 @@ using PktHeader = FirePlayCommon::PktHeader;
 
 namespace FirePlayNetwork
 {
-	IOCPNetwork::IOCPNetwork(ConsoleLogger * logger, const ServerInfo * serverInfo)
+	void IOCPNetwork::Init(
+		ConsoleLogger    * logger,
+		const ServerInfo * serverInfo,
+		PacketQueue      * recvPacketQueue,
+		PacketQueue      * sendPacketQueue)
 	{
 		_logger = logger;
+		_recvPacketQueue = recvPacketQueue;
+		_sendPacketQueue = sendPacketQueue;
 		memcpy_s(_serverInfo, sizeof(ServerInfo), serverInfo, sizeof(ServerInfo));
+
 		_sessionPool.Init(_serverInfo->Backlog);
 		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port -> %d, Backlog -> %d", _serverInfo->Port, _serverInfo->Backlog);
-	}
 
-	void IOCPNetwork::Init()
-	{
 		if (!initNetwork())
 		{
 			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network initialize failed", __FUNCTION__);
@@ -216,7 +220,7 @@ namespace FirePlayNetwork
 					RecvPacketInfo closeSessionInfo;
 					closeSessionInfo.PacketId = (short)PACKET_ID::NTF_SYS_CLOSE_SESSION;
 					closeSessionInfo.SessionIndex = sessionTag;
-					_recvPacketQueue.Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
+					_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
 
 					_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
 					continue;
@@ -247,7 +251,7 @@ namespace FirePlayNetwork
 						newPacket->pData = headerPosition + packetHeaderSize;
 						newPacket->SessionIndex = ioInfo->SessionTag;
 
-						_recvPacketQueue.Push(newPacket);
+						_recvPacketQueue->Push(newPacket);
 
 						// 패킷을 만든 후, 다음 번 헤더 자리를 지정하고, 남은 데이터 사이즈를 갱신한다.
 						headerPosition += packetHeaderSize + bodySize;
@@ -342,20 +346,20 @@ namespace FirePlayNetwork
 	{
 		while (true)
 		{
-			if (_sendPacketQueue.IsEmpty())
+			if (_sendPacketQueue->IsEmpty())
 			{
 				// 양보한다.
 				std::this_thread::sleep_for(std::chrono::milliseconds(0));
 				continue;
 			}
 
-			auto sendPacket = _sendPacketQueue.Peek();
+			auto sendPacket = _sendPacketQueue->Peek();
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
 			send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
 			send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
-			_sendPacketQueue.Pop();
+			_sendPacketQueue->Pop();
 		}
 	}
 }

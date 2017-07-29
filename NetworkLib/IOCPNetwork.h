@@ -27,11 +27,14 @@ namespace FirePlayNetwork
 	{
 	public:
 
-		IOCPNetwork(ConsoleLogger * logger, const ServerInfo * serverInfo);
-		IOCPNetwork() = delete;
-		~IOCPNetwork() {};
+		IOCPNetwork() {}
+		~IOCPNetwork() {}
 
-		void Init();
+		void Init(
+			ConsoleLogger    * logger,
+			const ServerInfo * serverInfo,
+			PacketQueue      * recvPacketQueue,
+			PacketQueue      * sendPacketQueue);
 		void Stop();
 		void Run();
 
@@ -57,12 +60,23 @@ namespace FirePlayNetwork
 
 		using SessionPool = FirePlayCommon::ObjectPool<SessionInfo>;
 		SessionPool _sessionPool;
-		PacketQueue _recvPacketQueue;
-		PacketQueue _sendPacketQueue;
+		PacketQueue * _recvPacketQueue;
+		PacketQueue * _sendPacketQueue;
 	};
 
-	static class Factory
+	static class NetworkFactory
 	{
+	public :
+		IOCPNetwork * Create(
+			ConsoleLogger    * logger,
+			const ServerInfo * serverInfo,
+			PacketQueue      * recvPacketQueue,
+			PacketQueue      * sendPacketQueue)
+		{
+			auto product = new IOCPNetwork();
+			product->Init(logger, serverInfo, recvPacketQueue, sendPacketQueue);
 
+			return product;
+		}
 	};
 }
