@@ -4,6 +4,10 @@
 #include <Windows.h>
 #include <thread>
 #include <vector>
+#include <memory>
+
+#include "../Common/ObjectPool.h"
+#include "SessionInfo.h"
 
 namespace FirePlayCommon
 {
@@ -28,28 +32,29 @@ namespace FirePlayNetwork
 
 		void Init();
 		void Stop();
+		void Run();
 
 		// Getter, Setter
 		HANDLE GetIocpHandle() const { return _iocpHandle; };
 
 	private :
 
-		bool startServer();
 		bool initNetwork();
+		bool startServer();
 		bool endNetwork();
-		void Run();
+
 		void workingThreadFunc();
 		void listenThreadFunc();
 		void sendThreadFunc();
 
 	private :
 
-		SOCKET _serverSocket = INVALID_SOCKET;
-		HANDLE _iocpHandle = INVALID_HANDLE_VALUE;
-		ConsoleLogger * _logger = nullptr;
-		ServerInfo * _serverInfo = nullptr;
+		SOCKET          _serverSocket = INVALID_SOCKET;
+		HANDLE          _iocpHandle   = INVALID_HANDLE_VALUE;
+		ConsoleLogger * _logger       = nullptr;
+		ServerInfo    * _serverInfo   = nullptr;
 
-		using ThreadVector = std::vector<std::thread>;
-		ThreadVector _threadVec;
+		using SessionPool = FirePlayCommon::ObjectPool<SessionInfo>;
+		SessionPool _sessionPool;
 	};
 }

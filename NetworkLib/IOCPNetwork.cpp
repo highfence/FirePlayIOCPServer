@@ -6,6 +6,7 @@
 
 #include "../Common/ConsoleLogger.h"
 #include "../Common/Define.h"
+#include "SessionInfo.h"
 
 namespace FirePlayNetwork
 {
@@ -13,6 +14,7 @@ namespace FirePlayNetwork
 	{
 		_logger = logger;
 		memcpy_s(_serverInfo, sizeof(ServerInfo), serverInfo, sizeof(ServerInfo));
+		_sessionPool.Init(_serverInfo->Backlog);
 	}
 
 	void IOCPNetwork::Init()
@@ -25,16 +27,6 @@ namespace FirePlayNetwork
 		else
 		{
 			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network initialize success", __FUNCTION__);
-		}
-
-		if (!startServer())
-		{
-			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network start failed", __FUNCTION__);
-			return;
-		}
-		else
-		{
-			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
 		}
 	}
 
@@ -51,37 +43,17 @@ namespace FirePlayNetwork
 		}
 	}
 
-	bool IOCPNetwork::startServer()
+	void IOCPNetwork::Run()
 	{
-		// 세팅된 소켓을 listen해준다.
-		auto retval = listen(_serverSocket, _serverInfo->Backlog);
-		if (retval != 0)
+		if (!startServer())
 		{
-			_logger->Write(LogType::LOG_ERROR, "%s | Socket Listen Failed.", __FUNCTION__);
-			return false;
+			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network start failed", __FUNCTION__);
+			return;
 		}
-		
-		// listen 쓰레드를 활성화한다.
-		auto listenThread = std::thread(std::bind(&IOCPNetwork::listenThreadFunc, this));
-		listenThread.detach();
-
-		// 시스템 정보를 알아온다.
-		SYSTEM_INFO si;
-		GetSystemInfo(&si);
-		int threadNum = si.dwNumberOfProcessors * 2;
-
-		// 코어 수의 두 배 만큼 working 쓰레드를 활성화한다.
-		for (int i = 0; i < threadNum; ++i)
+		else
 		{
-			auto workingThread = std::thread(std::bind(&IOCPNetwork::workingThreadFunc, this));
-			workingThread.detach();
+			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
 		}
-
-		// send 쓰레드를 활성화 한다.
-		auto sendThread = std::thread(std::bind(&IOCPNetwork::sendThreadFunc, this));
-		sendThread.detach();
-
-		return true;
 	}
 
 	bool IOCPNetwork::initNetwork()
@@ -107,18 +79,6 @@ namespace FirePlayNetwork
 			{
 				_logger->Write(LogType::LOG_ERROR, "%s | Iocp Creation Failed", __FUNCTION__);
 				return false;
-			}
-			return true;
-		};
-
-		auto createWorkingThreads = [this]() -> bool
-		{
-			SYSTEM_INFO si;
-			GetSystemInfo(&si);
-
-			for (int i = 0; i < static_cast<int>(si.dwNumberOfProcessors * 2); ++i)
-			{
-				_threadVec.emplace_back(std::thread([&]() { workingThreadFunc(); }));
 			}
 			return true;
 		};
@@ -157,11 +117,43 @@ namespace FirePlayNetwork
 
 		retval = (initWSA()              && retval);
 		retval = (createIOCP()           && retval);
-		retval = (createWorkingThreads() && retval);
 		retval = (createListenSocket()   && retval);
 		retval = (bindSocket()           && retval);
 
 		return retval;
+	}
+
+	bool IOCPNetwork::startServer()
+	{
+		// 세팅된 소켓을 listen해준다.
+		auto retval = listen(_serverSocket, _serverInfo->Backlog);
+		if (retval != 0)
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | Socket Listen Failed.", __FUNCTION__);
+			return false;
+		}
+		
+		// listen 쓰레드를 활성화한다.
+		auto listenThread = std::thread(std::bind(&IOCPNetwork::listenThreadFunc, this));
+		listenThread.detach();
+
+		// 시스템 정보를 알아온다.
+		SYSTEM_INFO si;
+		GetSystemInfo(&si);
+		int threadNum = si.dwNumberOfProcessors * 2;
+
+		// 코어 수의 두 배 만큼 working 쓰레드를 활성화한다.
+		for (int i = 0; i < threadNum; ++i)
+		{
+			auto workingThread = std::thread(std::bind(&IOCPNetwork::workingThreadFunc, this));
+			workingThread.detach();
+		}
+
+		// send 쓰레드를 활성화 한다.
+		auto sendThread = std::thread(std::bind(&IOCPNetwork::sendThreadFunc, this));
+		sendThread.detach();
+
+		return true;
 	}
 
 	bool IOCPNetwork::endNetwork()
@@ -186,10 +178,6 @@ namespace FirePlayNetwork
 		return retval;
 	}
 
-	void IOCPNetwork::Run()
-	{
-	}
-
 	void IOCPNetwork::workingThreadFunc()
 	{
 
@@ -197,7 +185,58 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::listenThreadFunc()
 	{
+#pragma region IOCP Function
 
+		auto BindSessionToIOCP = [this](SessionInfo* bindingSession)
+		{
+			CreateIoCompletionPort((HANDLE)bindingSession->_socket, _iocpHandle, (ULONG_PTR)nullptr, 0);
+		};
+
+#pragma endregion
+
+		while (true)
+		{
+			SOCKADDR_IN clientAddr;
+			ZeroMemory(&clientAddr, sizeof(clientAddr));
+			int addrlen = sizeof(clientAddr);
+
+			auto newClient = accept(_serverSocket, (SOCKADDR*)&clientAddr, &addrlen);
+			if (newClient == INVALID_SOCKET)
+			{
+				_logger->Write(LogType::LOG_ERROR, "%s | Client accpet failed", __FUNCTION__);
+				continue;
+			}
+
+			// TODO :: 동접자 초과했을 경우 처리.
+
+			// 풀에서 Session 하나를 받아 정보를 기입해준다.
+			auto newTag = _sessionPool.GetTag();
+			if (newTag < 0)
+			{
+				_logger->Write(LogType::LOG_WARN, "%s | Client Session Pool", __FUNCTION__);
+				continue;
+			}
+
+			auto newSession = _sessionPool[newTag];
+			newSession._tag = newTag;
+			newSession._socket = newClient;
+			
+			auto newIOCPInfo = new IOCPInfo();
+			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
+			newIOCPInfo->Wsabuf.buf = newSession._recvBuffer;
+			newIOCPInfo->Wsabuf.len = _serverInfo->MaxSessionRecvBufferSize;
+			newIOCPInfo->Status = IOCPInfoStatus::READ;
+			newIOCPInfo->SessionTag = newTag;
+
+			// IOCP에 새로운 세션을 등록해준다.
+			BindSessionToIOCP(&newSession);
+
+			DWORD recvSize = 0;
+			DWORD flags = 0;
+
+			// 리시브를 걸어놓는다.
+			WSARecv(newSession._socket, &newIOCPInfo->Wsabuf, 1, &recvSize, &flags, &newIOCPInfo->Overlapped, NULL);
+		}
 	}
 
 	void IOCPNetwork::sendThreadFunc()
