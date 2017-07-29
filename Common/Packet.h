@@ -11,6 +11,7 @@ namespace FirePlayCommon
 		short Id;
 		short BodySize;
 	};
+	const auto packetHeaderSize = sizeof(PktHeader);
 
 	struct PktBase
 	{

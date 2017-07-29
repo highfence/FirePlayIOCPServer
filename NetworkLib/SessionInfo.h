@@ -13,7 +13,7 @@ namespace FirePlayNetwork
 		WRITE = 2
 	};
 
-	struct IOCPInfo
+	struct IOÁ¤º¸
 	{
 		OVERLAPPED Overlapped;
 		WSABUF Wsabuf;

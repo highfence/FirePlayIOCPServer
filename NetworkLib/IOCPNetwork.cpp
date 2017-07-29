@@ -1,13 +1,18 @@
 #include "IOCPNetwork.h"
 
+#include <memory>
 #include <thread>
 #include <WinSock2.h>
+#include <chrono>
 #pragma comment(lib, "ws2_32")
 
 #include "../Common/ConsoleLogger.h"
 #include "../Common/Define.h"
+#include "../Common/Packet.h"
 #include "SessionInfo.h"
 #include "PacketQueue.h"
+
+using PktHeader = FirePlayCommon::PktHeader;
 
 namespace FirePlayNetwork
 {
@@ -147,7 +152,7 @@ namespace FirePlayNetwork
 		// 코어 수의 두 배 만큼 working 쓰레드를 활성화한다.
 		for (int i = 0; i < threadNum; ++i)
 		{
-			auto workingThread = std::thread(std::bind(&IOCPNetwork::workingThreadFunc, this));
+			auto workingThread = std::thread(std::bind(&IOCPNetwork::workerThreadFunc, this));
 			workingThread.detach();
 		}
 
@@ -180,36 +185,94 @@ namespace FirePlayNetwork
 		return retval;
 	}
 
-	void IOCPNetwork::workingThreadFunc()
+	void IOCPNetwork::workerThreadFunc()
 	{
 		DWORD transferredByte = 0;
-		IOCPInfo * iocpInfo   = nullptr;
-		SessionInfo * session = nullptr;
+		IO정보 * ioInfo		  = nullptr;
+		// Key가 넘어 온다고 하는데, 뭔지 모르겠고 안씀. 나중에 검색해봐야징. :)
+		SessionInfo * key     = nullptr;
 
 		while (true)
 		{
-			auto retval = GetQueuedCompletionStatus(_iocpHandle, &transferredByte, (PULONG_PTR)&session, (LPOVERLAPPED*)&iocpInfo, INFINITE);
+			auto retval = GetQueuedCompletionStatus(_iocpHandle, &transferredByte, (PULONG_PTR)&key, (LPOVERLAPPED*)&ioInfo, INFINITE);
 			if (retval == FALSE)
 			{
 				_logger->Write(LogType::LOG_ERROR, "%s | Iocp GetQueuedCompletionStatus Failed", __FUNCTION__);
 				continue;
 			}
 
-			auto sessionTag = iocpInfo->SessionTag;
+			auto sessionTag = ioInfo->SessionTag;
 			SessionInfo session = _sessionPool[sessionTag];
 
-			// 종료 검사.
-			if (transferredByte == 0)
+			if (ioInfo->Status == IOCPInfoStatus::READ)
 			{
-				session.Clear();
-				_sessionPool.ReleaseTag(sessionTag);
-				// TODO :: 사용자 종료 패킷 조제후 패킷 큐에 넣어주기.
-				_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
-				continue;
+				// 종료 검사.
+				if (transferredByte == 0)
+				{
+					session.Clear();
+					_sessionPool.ReleaseTag(sessionTag);
+					// TODO :: 사용자 종료 패킷 조제후 패킷 큐에 넣어주기.
+					_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
+					continue;
+				}
+
+				auto headerPosition = session._recvBuffer;
+				auto receivePosition = ioInfo->Wsabuf.buf;
+
+				// 처리안된 데이터의 총 량
+				auto totalDataSize = receivePosition + transferredByte - session._recvBuffer;
+
+				// 패킷으로 만들어지길 기다리는 데이터의 사이즈
+				auto remainDataSize = totalDataSize;
+
+				const auto packetHeaderSize = FirePlayCommon::packetHeaderSize;
+				while (remainDataSize >= packetHeaderSize)
+				{
+					// 헤더를 들여다 보기에 충분한 데이터가 있다면 헤더를 들여다본다.
+					auto header = (PktHeader*)headerPosition;
+					auto bodySize = header->BodySize;
+
+					if (packetHeaderSize + bodySize >= remainDataSize)
+					{
+						// 패킷을 만들어준다.
+						auto newPacket = std::make_shared<RecvPacketInfo>();
+						newPacket->PacketId = header->Id;
+						newPacket->PacketBodySize = bodySize;
+						newPacket->pData = headerPosition + packetHeaderSize;
+						newPacket->SessionIndex = ioInfo->SessionTag;
+
+						_recvPacketQueue.Push(newPacket);
+
+						// 패킷을 만든 후, 다음 번 헤더 자리를 지정하고, 남은 데이터 사이즈를 갱신한다.
+						headerPosition += packetHeaderSize + bodySize;
+						remainDataSize -= packetHeaderSize + bodySize;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				// 남은 데이터를 버퍼의 맨 앞으로 당겨준다.
+				memcpy_s(session._recvBuffer, _serverInfo->MaxSessionRecvBufferSize, headerPosition, remainDataSize);
+
+				// 만들 수 있는 패킷은 다 만들었으므로, Recv를 건다.
+				ZeroMemory(&ioInfo->Overlapped, sizeof(OVERLAPPED));
+
+				// remainDataSize만큼은 띄고 받는다.
+				ioInfo->Wsabuf.buf = session._recvBuffer + remainDataSize;
+				ioInfo->Wsabuf.len = _serverInfo->MaxSessionRecvBufferSize - remainDataSize;
+				ioInfo->Status = IOCPInfoStatus::READ;
+
+				DWORD recvSize = 0;
+				DWORD flags = 0;
+				WSARecv(session._socket, &ioInfo->Wsabuf, 1, &recvSize, &flags, &ioInfo->Overlapped, nullptr);
 			}
+			// TODO 
+			else
+			{
 
-			
-
+			}
 		}
 	}
 
@@ -251,7 +314,7 @@ namespace FirePlayNetwork
 			newSession._tag = newTag;
 			newSession._socket = newClient;
 			
-			auto newIOCPInfo = new IOCPInfo();
+			auto newIOCPInfo = new IO정보();
 			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
 			newIOCPInfo->Wsabuf.buf = newSession._recvBuffer;
 			newIOCPInfo->Wsabuf.len = _serverInfo->MaxSessionRecvBufferSize;
@@ -271,7 +334,22 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::sendThreadFunc()
 	{
+		while (true)
+		{
+			if (_sendPacketQueue.IsEmpty())
+			{
+				// 양보한다.
+				std::this_thread::sleep_for(std::chrono::milliseconds(0));
+				continue;
+			}
 
+			auto sendPacket = _sendPacketQueue.Peek();
+			auto destSession = _sessionPool[sendPacket->SessionIndex];
+			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
+			
+			send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
+			send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
+			_sendPacketQueue.Pop();
+		}
 	}
-	
 }

@@ -44,7 +44,7 @@ namespace FirePlayNetwork
 		bool startServer();
 		bool endNetwork();
 
-		void workingThreadFunc();
+		void workerThreadFunc();
 		void listenThreadFunc();
 		void sendThreadFunc();
 
@@ -57,6 +57,7 @@ namespace FirePlayNetwork
 
 		using SessionPool = FirePlayCommon::ObjectPool<SessionInfo>;
 		SessionPool _sessionPool;
-		PacketQueue _packetQueue;
+		PacketQueue _recvPacketQueue;
+		PacketQueue _sendPacketQueue;
 	};
 }
