@@ -17,15 +17,74 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::Init()
 	{
+		if (!initNetwork())
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network initialize failed", __FUNCTION__);
+			return;
+		}
+		else
+		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network initialize success", __FUNCTION__);
+		}
 
+		if (!startServer())
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network start failed", __FUNCTION__);
+			return;
+		}
+		else
+		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
+		}
 	}
 
 	void IOCPNetwork::Stop()
 	{
-
+		if (!endNetwork())
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | IOCPNetwork :: Network end failed", __FUNCTION__);
+			return;
+		}
+		else
+		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network end success", __FUNCTION__);
+		}
 	}
 
-	bool IOCPNetwork::startNetwork()
+	bool IOCPNetwork::startServer()
+	{
+		// 세팅된 소켓을 listen해준다.
+		auto retval = listen(_serverSocket, _serverInfo->Backlog);
+		if (retval != 0)
+		{
+			_logger->Write(LogType::LOG_ERROR, "%s | Socket Listen Failed.", __FUNCTION__);
+			return false;
+		}
+		
+		// listen 쓰레드를 활성화한다.
+		auto listenThread = std::thread(std::bind(&IOCPNetwork::listenThreadFunc, this));
+		listenThread.detach();
+
+		// 시스템 정보를 알아온다.
+		SYSTEM_INFO si;
+		GetSystemInfo(&si);
+		int threadNum = si.dwNumberOfProcessors * 2;
+
+		// 코어 수의 두 배 만큼 working 쓰레드를 활성화한다.
+		for (int i = 0; i < threadNum; ++i)
+		{
+			auto workingThread = std::thread(std::bind(&IOCPNetwork::workingThreadFunc, this));
+			workingThread.detach();
+		}
+
+		// send 쓰레드를 활성화 한다.
+		auto sendThread = std::thread(std::bind(&IOCPNetwork::sendThreadFunc, this));
+		sendThread.detach();
+
+		return true;
+	}
+
+	bool IOCPNetwork::initNetwork()
 	{
 #pragma region Start Network Functions
 
@@ -59,7 +118,7 @@ namespace FirePlayNetwork
 
 			for (int i = 0; i < static_cast<int>(si.dwNumberOfProcessors * 2); ++i)
 			{
-				_threadVec.emplace_back(std::thread([&]() { workingThread(); }));
+				_threadVec.emplace_back(std::thread([&]() { workingThreadFunc(); }));
 			}
 			return true;
 		};
@@ -102,13 +161,7 @@ namespace FirePlayNetwork
 		retval = (createListenSocket()   && retval);
 		retval = (bindSocket()           && retval);
 
-		if (retval == true)
-		{
-			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network start success", __FUNCTION__);
-			return true;
-		}
-
-		return false;
+		return retval;
 	}
 
 	bool IOCPNetwork::endNetwork()
@@ -126,15 +179,30 @@ namespace FirePlayNetwork
 
 #pragma endregion
 
-		endWSA();
+		bool retval = true;
+
+		retval = (endWSA() && retval);
+
+		return retval;
 	}
 
 	void IOCPNetwork::Run()
 	{
 	}
 
-	void IOCPNetwork::workingThread()
+	void IOCPNetwork::workingThreadFunc()
 	{
+
+	}
+
+	void IOCPNetwork::listenThreadFunc()
+	{
+
+	}
+
+	void IOCPNetwork::sendThreadFunc()
+	{
+
 	}
 	
 }

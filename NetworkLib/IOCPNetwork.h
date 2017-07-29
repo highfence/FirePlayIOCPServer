@@ -34,10 +34,13 @@ namespace FirePlayNetwork
 
 	private :
 
-		bool startNetwork();
+		bool startServer();
+		bool initNetwork();
 		bool endNetwork();
 		void Run();
-		void workingThread();
+		void workingThreadFunc();
+		void listenThreadFunc();
+		void sendThreadFunc();
 
 	private :
 
