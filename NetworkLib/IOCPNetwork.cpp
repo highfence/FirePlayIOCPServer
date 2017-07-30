@@ -16,6 +16,7 @@
 #include "ServerNetErrorCode.h"
 
 using PktHeader = FirePlayCommon::PktHeader;
+using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
 
 namespace FirePlayNetwork
 {

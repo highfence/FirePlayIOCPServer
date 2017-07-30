@@ -77,7 +77,7 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::ntfSysCloseSession(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+	
 	}
 
 

@@ -31,7 +31,8 @@ namespace FirePlayLogic
 	using PacketFuncList = std::list<PacketFunc>;
 
 	class ConnectedUserManager;
-
+	class UserManager;
+	class LobbyManager;
 
 	class PacketProcess
 	{
@@ -82,6 +83,8 @@ namespace FirePlayLogic
 		PacketQueue * _recvQueue = nullptr;
 		PacketQueue * _sendQueue = nullptr;
 		std::unique_ptr<ConnectedUserManager> _connectedUserManager = nullptr;
+		UserManager * _userManager = nullptr;
+		LobbyManager * _lobbyManager = nullptr;
 
 		std::unordered_map<short, PacketFuncList> _processMap;
 
