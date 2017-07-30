@@ -9,6 +9,8 @@
 #include "../Common/ConsoleLogger.h"
 #include "../Common/Define.h"
 #include "../Common/Packet.h"
+#include "../Common/ObjectPool.h"
+
 #include "SessionInfo.h"
 #include "PacketQueue.h"
 #include "ServerNetErrorCode.h"
@@ -23,7 +25,7 @@ namespace FirePlayNetwork
 		PacketQueue      * recvPacketQueue,
 		PacketQueue      * sendPacketQueue)
 	{
-		if (logger == nullptr || recvPacketQueue == nullptr || sendPacketQueue == nullptr)
+		if (logger == nullptr || serverInfo == nullptr || recvPacketQueue == nullptr || sendPacketQueue == nullptr)
 		{
 			return;
 		}
@@ -70,6 +72,16 @@ namespace FirePlayNetwork
 		{
 			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network end success", __FUNCTION__);
 		}
+	}
+
+	void IOCPNetwork::ForcingClose(const int sessionIdx)
+	{
+		if (_sessionPool[sessionIdx].IsConnected() == false)
+		{
+			return;
+		}
+
+		closeSession(FirePlayCommon::SOCKET_CLOSE_CASE::FORCING_CLOSE, static_cast<SOCKET>(_sessionPool[sessionIdx]._socket), sessionIdx);
 	}
 
 	bool IOCPNetwork::initNetwork()
@@ -194,6 +206,38 @@ namespace FirePlayNetwork
 		return retval;
 	}
 
+	void IOCPNetwork::closeSession(const FirePlayCommon::SOCKET_CLOSE_CASE closeCase, const SOCKET socket, const int sesseionIdx)
+	{
+		if (closeCase == FirePlayCommon::SOCKET_CLOSE_CASE::SESSION_POOL_EMPTY)
+		{
+			closesocket(socket);
+			return;
+		}
+
+		if (_sessionPool[sesseionIdx].IsConnected() == false)
+		{
+			return;
+		}
+
+		closesocket(socket);
+		_sessionPool[sesseionIdx].Clear();
+		--_connectedSessionCount;
+		_sessionPool.ReleaseTag(sesseionIdx);
+
+		addPacketQueue(sesseionIdx, (short)PACKET_ID::NTF_SYS_CLOSE_SESSION, 0, nullptr);
+	}
+
+	void IOCPNetwork::addPacketQueue(const int sessionIdx, const short pktId, const short bodySize, char * pDataPos)
+	{
+		RecvPacketInfo packetInfo;
+		packetInfo.SessionIndex = sessionIdx;
+		packetInfo.PacketId = pktId;
+		packetInfo.PacketBodySize = bodySize;
+		packetInfo.pData = pDataPos;
+
+		_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(packetInfo));
+	}
+
 	void IOCPNetwork::workerThreadFunc()
 	{
 		DWORD transferredByte = 0;
@@ -213,7 +257,7 @@ namespace FirePlayNetwork
 			auto sessionTag = ioInfo->SessionTag;
 			SessionInfo session = _sessionPool[sessionTag];
 
-			if (ioInfo->Status == IOCPInfoStatus::READ)
+			if (ioInfo->Status == IOInfoStatus::READ)
 			{
 				// 종료 검사.
 				if (transferredByte == 0)
@@ -268,15 +312,15 @@ namespace FirePlayNetwork
 				}
 
 				// 남은 데이터를 버퍼의 맨 앞으로 당겨준다.
-				memcpy_s(session._recvBuffer, _serverInfo->MaxSessionRecvBufferSize, headerPosition, remainDataSize);
+				memcpy_s(session._recvBuffer, _serverInfo->MaxClientRecvBufferSize, headerPosition, remainDataSize);
 
 				// 만들 수 있는 패킷은 다 만들었으므로, Recv를 건다.
 				ZeroMemory(&ioInfo->Overlapped, sizeof(OVERLAPPED));
 
 				// remainDataSize만큼은 띄고 받는다.
 				ioInfo->Wsabuf.buf = session._recvBuffer + remainDataSize;
-				ioInfo->Wsabuf.len = _serverInfo->MaxSessionRecvBufferSize - remainDataSize;
-				ioInfo->Status = IOCPInfoStatus::READ;
+				ioInfo->Wsabuf.len = _serverInfo->MaxClientRecvBufferSize - remainDataSize;
+				ioInfo->Status = IOInfoStatus::READ;
 
 				DWORD recvSize = 0;
 				DWORD flags = 0;
@@ -331,8 +375,8 @@ namespace FirePlayNetwork
 			auto newIOCPInfo = new IO정보();
 			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
 			newIOCPInfo->Wsabuf.buf = newSession._recvBuffer;
-			newIOCPInfo->Wsabuf.len = _serverInfo->MaxSessionRecvBufferSize;
-			newIOCPInfo->Status = IOCPInfoStatus::READ;
+			newIOCPInfo->Wsabuf.len = _serverInfo->MaxClientRecvBufferSize;
+			newIOCPInfo->Status = IOInfoStatus::READ;
 			newIOCPInfo->SessionTag = newTag;
 
 			// IOCP에 새로운 세션을 등록해준다.

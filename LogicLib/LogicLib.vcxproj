@@ -147,10 +147,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="ConnectedUserManager.h" />
+    <ClInclude Include="PacketProcess.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="ConnectedUserManager.cpp" />
+    <ClCompile Include="PacketProcess.cpp" />
+    <ClCompile Include="PacketProcessLobby.cpp" />
+    <ClCompile Include="PacketProcessLogin.cpp" />
+    <ClCompile Include="PacketProcessRoom.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,7 +6,7 @@ namespace FirePlayNetwork
 	const int maxIpLen = 32; // IP 문자열 최대 길이
 	const int maxPacketBodySize = 1024; // 최대 패킷 보디 크기
 
-	enum class IOCPInfoStatus : int
+	enum class IOInfoStatus : int
 	{
 		NONE = 0,
 		READ = 1,
@@ -17,7 +17,7 @@ namespace FirePlayNetwork
 	{
 		OVERLAPPED Overlapped;
 		WSABUF Wsabuf;
-		IOCPInfoStatus Status = IOCPInfoStatus::NONE;
+		IOInfoStatus Status = IOInfoStatus::NONE;
 		int SessionTag = -1;
 	};
 
@@ -51,22 +51,5 @@ namespace FirePlayNetwork
 		int       _sendSize = 0;
 	};
 
-	class RecvPacketInfo
-	{
-	public :
 
-		RecvPacketInfo() {};
-		~RecvPacketInfo() 
-		{
-			if (pData != nullptr)
-			{
-				delete[] pData;
-			}
-		};
-
-		int SessionIndex = 0;
-		short PacketId = 0;
-		short PacketBodySize = 0;
-		char * pData = nullptr;
-	};
 }
