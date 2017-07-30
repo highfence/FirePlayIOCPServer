@@ -1,5 +1,4 @@
 #pragma once
-#include <WinSock2.h>
 
 namespace FirePlayNetwork
 {
@@ -50,6 +49,5 @@ namespace FirePlayNetwork
 		char *    _sendBuffer = nullptr;
 		int       _sendSize = 0;
 	};
-
 
 }

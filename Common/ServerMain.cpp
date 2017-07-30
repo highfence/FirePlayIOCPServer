@@ -1,8 +1,22 @@
 #pragma once
-#include <Windows.h>
+#include <WinSock2.h>
+#include <iostream>
+#include <thread>
+#include "../LogicLib/ServerHost.h"
 
-int wmain(int argc, wchar_t* argv[])
+using ServerHost = FirePlayLogic::ServerHost;
+
+int main(void)
 {
+	ServerHost host;
+	host.Init();
+
+	host.Run();
+
+	std::cout << "press any key to exit...";
+	getchar();
+
+	host.Stop();
 
 	return 0;
 }

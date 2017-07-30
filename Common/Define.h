@@ -5,9 +5,8 @@ namespace FirePlayCommon
 {
 	typedef struct ServerInfo
 	{
-		int Port = 0;
+		unsigned short Port = 0;
 		int Backlog = 0;
-		std::string ServerIp;
 
 		int MaxClientCount;
 		int ExtraClientCount; // 가능하면 로그인에서 짜르도록 MaxClientCount + 여유분을 준비한다.
@@ -53,4 +52,5 @@ namespace FirePlayCommon
 		short PacketBodySize = 0;
 		char * pData = nullptr;
 	};
+
 }

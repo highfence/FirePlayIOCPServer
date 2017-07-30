@@ -2,21 +2,22 @@
 
 #include <memory>
 #include <thread>
-#include <WinSock2.h>
 #include <chrono>
-#pragma comment(lib, "ws2_32")
 
 #include "../Common/ConsoleLogger.h"
 #include "../Common/Define.h"
 #include "../Common/Packet.h"
 #include "../Common/ObjectPool.h"
+#include "../Common/PacketID.h"
+#include "ServerNetErrorCode.h"
 
-#include "SessionInfo.h"
+#include "ServerInfo.h"
 #include "PacketQueue.h"
 #include "ServerNetErrorCode.h"
 
 using PktHeader = FirePlayCommon::PktHeader;
 using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
+using PACKET_ID = FirePlayCommon::PACKET_ID;
 
 namespace FirePlayNetwork
 {
@@ -225,7 +226,7 @@ namespace FirePlayNetwork
 		--_connectedSessionCount;
 		_sessionPool.ReleaseTag(sesseionIdx);
 
-		addPacketQueue(sesseionIdx, (short)PACKET_ID::NTF_SYS_CLOSE_SESSION, 0, nullptr);
+		addPacketQueue(sesseionIdx, (short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CLOSE_SESSION, 0, nullptr);
 	}
 
 	void IOCPNetwork::addPacketQueue(const int sessionIdx, const short pktId, const short bodySize, char * pDataPos)
@@ -267,7 +268,7 @@ namespace FirePlayNetwork
 					_sessionPool.ReleaseTag(sessionTag);
 
 					RecvPacketInfo closeSessionInfo;
-					closeSessionInfo.PacketId = (short)PACKET_ID::NTF_SYS_CLOSE_SESSION;
+					closeSessionInfo.PacketId = (short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CLOSE_SESSION;
 					closeSessionInfo.SessionIndex = sessionTag;
 					_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
 
@@ -402,7 +403,7 @@ namespace FirePlayNetwork
 				continue;
 			}
 
-			auto sendPacket = _sendPacketQueue->Peek();
+			std::shared_ptr<RecvPacketInfo> sendPacket = _sendPacketQueue->Peek();
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			

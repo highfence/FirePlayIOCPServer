@@ -3,24 +3,40 @@
 #include <memory>
 
 #include "../Common/ConsoleLogger.h"
-#include "../NetworkLib/PacketQueue.h"
+#include "../Common/Define.h"
 
+#include "../NetworkLib/PacketQueue.h"
+#include "../NetworkLib/ServerInfo.h"
+#include "../NetworkLib/ServerNetErrorCode.h"
+
+#include "UserManager.h"
 #include "ConnectedUserManager.h"
 
 namespace FirePlayLogic
 {
 	using LogType = FirePlayCommon::LogType;
 
-	void PacketProcess::Init(ConsoleLogger * logger, PacketQueue * recvQueue, PacketQueue * sendQueue)
+	void PacketProcess::Init(
+		ConsoleLogger * logger,
+		UserManager   * userManager,
+		LobbyManager  * lobbyManager,
+		PacketQueue   * recvQueue,
+		PacketQueue   * sendQueue)
 	{
-		if (logger == nullptr || recvQueue == nullptr || sendQueue == nullptr)
+		if (logger    == nullptr ||
+			recvQueue == nullptr ||
+			sendQueue == nullptr)
 		{
 			return;
 		}
 
-		_logger = logger;
-		_recvQueue = recvQueue;
-		_sendQueue = sendQueue;
+		_logger       = logger;
+		_userManager  = userManager;
+		_lobbyManager = lobbyManager;
+		_recvQueue    = recvQueue;
+		_sendQueue    = sendQueue;
+
+		registFunctions();
 	}
 
 	void PacketProcess::BroadCast(std::shared_ptr<RecvPacketInfo> packetInfo)
@@ -69,6 +85,15 @@ namespace FirePlayLogic
 		BroadCast(recvPacket);
 	}
 
+	void PacketProcess::registFunctions()
+	{
+		Subscribe((short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CONNECT_SESSION,
+			std::bind(&PacketProcess::ntfSysConnectSession, this, std::placeholders::_1));
+
+		Subscribe((short)FirePlayCommon::PACKET_ID::LOGIN_IN_REQ,
+			std::bind(&PacketProcess::login, this, std::placeholders::_1));
+	}
+
 	ERROR_CODE PacketProcess::ntfSysConnectSession(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
 		_connectedUserManager->SetConnectSession(packetInfo->SessionIndex);
@@ -77,7 +102,7 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::ntfSysCloseSession(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-	
+		return ERROR_CODE::NONE;
 	}
 
 

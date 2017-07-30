@@ -1,13 +1,16 @@
 #pragma once
-#include <winsock2.h>
+
 #pragma comment(lib, "ws2_32")
-#include <Windows.h>
+#include <winsock2.h>
 #include <thread>
 #include <vector>
 #include <memory>
 
 #include "../Common/ObjectPool.h"
 #include "../Common/Define.h"
+
+#include "ServerInfo.h"
+#include "PacketQueue.h"
 
 namespace FirePlayCommon
 {
@@ -21,7 +24,6 @@ namespace FirePlayNetwork
 	using ConsoleLogger = FirePlayCommon::ConsoleLogger;
 	using LogType = FirePlayCommon::LogType;
 	using ServerInfo = FirePlayCommon::ServerInfo;
-	class PacketQueue;
 
 	class IOCPNetwork
 	{
@@ -72,7 +74,7 @@ namespace FirePlayNetwork
 
 	public :
 
-		static class Factory
+		class Factory
 		{
 		public:
 			static IOCPNetwork * Create(

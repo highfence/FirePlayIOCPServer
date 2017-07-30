@@ -21,13 +21,13 @@
     <ClInclude Include="IOCPNetwork.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="SessionInfo.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="PacketQueue.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="ServerNetErrorCode.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerInfo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

@@ -145,7 +145,7 @@
     <ClInclude Include="IOCPNetwork.h" />
     <ClInclude Include="PacketQueue.h" />
     <ClInclude Include="ServerNetErrorCode.h" />
-    <ClInclude Include="SessionInfo.h" />
+    <ClInclude Include="ServerInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IOCPNetwork.cpp" />

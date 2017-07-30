@@ -6,6 +6,8 @@ namespace FirePlayNetwork
 	enum class NET_ERROR_CODE : short
 	{
 		NONE = 0,
+		NTF_SYS_CONNECT_SESSION = 2,
+		NTF_SYS_CLOSE_SESSION = 3,
 
 		SERVER_SOCKET_CREATE_FAIL = 11,
 		SERVER_SOCKET_SO_REUSEADDR_FAIL = 12,
@@ -40,11 +42,5 @@ namespace FirePlayNetwork
 		NET_ERROR_CODE Error = NET_ERROR_CODE::NONE;
 		wchar_t Msg[MAX_NET_ERROR_STRING_COUNT] = { 0, };
 		int Value = 0;
-	};
-
-	enum class PACKET_ID : short
-	{
-		NTF_SYS_CONNECT_SESSION = 2,
-		NTF_SYS_CLOSE_SESSION = 3,
 	};
 }

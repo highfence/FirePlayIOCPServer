@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Windows.h>
+#include <WinSock2.h>
 #include <iostream>
 #include <stdarg.h>
 #include <mutex>

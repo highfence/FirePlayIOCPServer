@@ -6,4 +6,9 @@ namespace FirePlayLogic
 	{
 		time(&_userList[sessionIdx]->_connectedTime);
 	}
+	
+	void ConnectedUserManager::SetLogin(const int sessionIdx)
+	{
+		_userList[sessionIdx]->_isLoginSuccess = true;
+	}
 }

@@ -13,11 +13,11 @@ namespace FirePlayLogic
 	{
 		void Clear()
 		{
-			_isLogicSuccess = false;
+			_isLoginSuccess = false;
 			_connectedTime = 0;
 		}
 
-		bool _isLogicSuccess = false;
+		bool _isLoginSuccess = false;
 		time_t _connectedTime = 0;
 	};
 
@@ -32,6 +32,7 @@ namespace FirePlayLogic
 		~ConnectedUserManager() {};
 
 		void SetConnectSession(const int sessionIdx);
+		void SetLogin(const int sessionIdx);
 
 	private :
 

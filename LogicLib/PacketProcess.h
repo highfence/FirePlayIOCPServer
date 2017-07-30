@@ -8,14 +8,13 @@
 #include "../Common/ErrorCode.h"
 #include "../Common/Define.h"
 
+#include "../NetworkLib/PacketQueue.h"
+
+#include "ConnectedUserManager.h"
+
 namespace FirePlayCommon
 {
 	class ConsoleLogger;
-}
-
-namespace FirePlayNetwork
-{
-	class PacketQueue;
 }
 
 namespace FirePlayLogic
@@ -30,7 +29,6 @@ namespace FirePlayLogic
 	using PacketFunc = std::function<ERROR_CODE(std::shared_ptr<RecvPacketInfo>)>;
 	using PacketFuncList = std::list<PacketFunc>;
 
-	class ConnectedUserManager;
 	class UserManager;
 	class LobbyManager;
 
@@ -41,13 +39,21 @@ namespace FirePlayLogic
 		PacketProcess() {};
 		~PacketProcess() {};
 
-		void Init(ConsoleLogger * logger, PacketQueue * recvQueue, PacketQueue * sendQueue);
+		void Init(
+			ConsoleLogger * logger,
+			UserManager   * userManager,
+			LobbyManager  * lobbyManager,
+			PacketQueue   * recvQueue,
+			PacketQueue   * sendQueue);
 		void BroadCast(std::shared_ptr<RecvPacketInfo> packetInfo);
 		void Subscribe(short interestedPacketId, PacketFunc functor);
 
 		void Update();
 
 	private :
+
+		void registFunctions();
+
 		ERROR_CODE ntfSysConnectSession(std::shared_ptr<RecvPacketInfo> packetInfo);
 		ERROR_CODE ntfSysCloseSession(std::shared_ptr<RecvPacketInfo> packetInfo);
 
@@ -93,7 +99,12 @@ namespace FirePlayLogic
 		static class Factory
 		{
 		public:
-			static PacketProcess * Create(ConsoleLogger * logger, PacketQueue * recvQueue, PacketQueue * sendQueue)
+			static PacketProcess * Create(
+				ConsoleLogger * logger,
+				UserManager   * userManager,
+				LobbyManager  * lobbyManager,
+				PacketQueue   * recvQueue,
+				PacketQueue   * sendQueue)
 			{
 				auto product = new PacketProcess();
 				if (product == nullptr)
@@ -101,7 +112,7 @@ namespace FirePlayLogic
 					return nullptr;
 				}
 
-				product->Init(logger, recvQueue, sendQueue);
+				product->Init(logger, userManager, lobbyManager, recvQueue, sendQueue);
 				return product;
 			}
 		};

@@ -4,7 +4,9 @@
 #include <mutex>
 
 #include "../Common/PacketID.h"
-#include "SessionInfo.h"
+#include "../Common/Define.h"
+
+using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
 
 namespace FirePlayNetwork
 {
@@ -15,6 +17,9 @@ namespace FirePlayNetwork
 	class PacketQueue
 	{
 	public :
+
+		PacketQueue() = default;
+		~PacketQueue() = default;
 
 		std::shared_ptr<RecvPacketInfo> Peek()
 		{
