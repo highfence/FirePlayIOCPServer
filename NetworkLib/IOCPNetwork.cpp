@@ -28,6 +28,23 @@ namespace FirePlayNetwork
 		PacketQueue      * recvPacketQueue,
 		PacketQueue      * sendPacketQueue)
 	{
+#pragma region Session Initialize Function
+
+		// 클라이언트 세션 풀을 초기화.
+		auto sessionPoolInitialize = [this]()
+		{
+			_sessionPool.Init(_serverInfo.Backlog);
+
+			// 오브젝트 풀에 할당된 Session마다 설정.
+			for (int i = 0; i < _serverInfo.Backlog; ++i)
+			{
+				_sessionPool[i]._tag = i;
+				_sessionPool[i]._recvBuffer = new char[_serverInfo.MaxClientRecvBufferSize];
+			}
+		};
+
+#pragma endregion
+
 		if (logger == nullptr || serverInfo == nullptr || recvPacketQueue == nullptr || sendPacketQueue == nullptr)
 		{
 			return;
@@ -38,8 +55,7 @@ namespace FirePlayNetwork
 		_sendPacketQueue = sendPacketQueue;
 		memcpy(&_serverInfo, serverInfo, sizeof(ServerInfo));
 
-		// 클라이언트 세션 풀을 할당한다.
-		_sessionPool.Init(_serverInfo.Backlog);
+		sessionPoolInitialize();
 
 		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port(%d), Backlog(%d)", _serverInfo.Port, _serverInfo.Backlog);
 
@@ -259,7 +275,7 @@ namespace FirePlayNetwork
 	void IOCPNetwork::workerThreadFunc()
 	{
 		DWORD transferredByte = 0;
-		IO정보 * ioInfo		  = nullptr;
+		IOInfo * ioInfo		  = nullptr;
 		// Key가 넘어 온다고 하는데, 뭔지 모르겠고 안씀. 나중에 검색해봐야징. :)
 		SessionInfo * key     = nullptr;
 
@@ -348,9 +364,10 @@ namespace FirePlayNetwork
 
 				if (SOCKET_ERROR == retval)
 				{
-					if (WSAGetLastError() != WSA_IO_PENDING)
+					auto error = WSAGetLastError();
+					if (error != WSA_IO_PENDING)
 					{
-						_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error!", __FUNCTION__);
+						_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error(%d)", __FUNCTION__, error);
 					}
 				}
 			}
@@ -403,7 +420,7 @@ namespace FirePlayNetwork
 			newSession._socket = newClient;
 			newSession._socketAddress = clientAddr;
 			
-			auto newIOCPInfo = new IO정보();
+			auto newIOCPInfo = new IOInfo();
 			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
 			newIOCPInfo->Wsabuf.buf = newSession._recvBuffer;
 			newIOCPInfo->Wsabuf.len = _serverInfo.MaxClientRecvBufferSize;

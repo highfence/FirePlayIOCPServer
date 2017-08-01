@@ -82,6 +82,7 @@ namespace FirePlayCommon
 
 		void consoleOutWithColor(const ConsoleColor color, const char* logHead, const char * logText)
 		{
+			// TODO :: Cout이 멀티스레드 세이프한지 확인하고 맞다면 락 풀기.
 			std::lock_guard<std::mutex> _writeLock(_lock);
 
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (WORD)color);
