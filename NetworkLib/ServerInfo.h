@@ -24,8 +24,12 @@ namespace FirePlayNetwork
 	{
 	public :
 
-		SessionInfo() {};
-		~SessionInfo() {};
+		SessionInfo() 
+		{
+			ZeroMemory(&_socketAddress, sizeof(SOCKADDR_IN));
+		}
+
+		~SessionInfo() {}
 
 		bool IsConnected() { return _socket != 0 ? true : false; }
 
@@ -36,10 +40,12 @@ namespace FirePlayNetwork
 			_reServerHostingDataSize = 0;
 			_prevReadPosInRecvBuffer = 0;
 			_sendSize = 0;
+			ZeroMemory(&_socketAddress, sizeof(SOCKADDR_IN));
 		}
 
 		int       _tag = 0;
 		SOCKET    _socket = INVALID_SOCKET;
+		SOCKADDR_IN _socketAddress;
 		char      _ip[maxIpLen] = { 0, };
 
 		char *    _recvBuffer = nullptr;

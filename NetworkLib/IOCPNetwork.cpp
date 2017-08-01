@@ -401,6 +401,7 @@ namespace FirePlayNetwork
 			auto newSession = _sessionPool[newTag];
 			newSession._tag = newTag;
 			newSession._socket = newClient;
+			newSession._socketAddress = clientAddr;
 			
 			auto newIOCPInfo = new IO정보();
 			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
@@ -416,14 +417,19 @@ namespace FirePlayNetwork
 			DWORD flags = 0;
 
 			// 리시브를 걸어놓는다.
-			auto retval = WSARecv(newSession._socket, &newIOCPInfo->Wsabuf, 1, &recvSize, &flags, &newIOCPInfo->Overlapped, NULL);
+			auto retval = WSARecv(
+				newSession._socket,
+				&newIOCPInfo->Wsabuf,
+				1,
+				&recvSize, &flags, &newIOCPInfo->Overlapped, nullptr);
 			_logger->Write(LogType::LOG_DEBUG, "%s | Waiting for recv massage from socket(%I64u)", __FUNCTION__, newSession._socket);
 
 			if (SOCKET_ERROR == retval)
 			{
-				if (WSAGetLastError() != WSA_IO_PENDING)
+				auto error = WSAGetLastError();
+				if (error != WSA_IO_PENDING)
 				{
-					_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error!", __FUNCTION__);
+					_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error(%d)", __FUNCTION__, error);
 				}
 			}
 		}
