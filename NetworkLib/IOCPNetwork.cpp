@@ -77,6 +77,9 @@ namespace FirePlayNetwork
 		{
 			_logger->Write(LogType::LOG_DEBUG, "%s | IOCPNetwork :: Network end success", __FUNCTION__);
 		}
+
+		// Object풀 클래스 초기화.
+		_sessionPool.Release();
 	}
 
 	void IOCPNetwork::ForcingClose(const int sessionIdx)

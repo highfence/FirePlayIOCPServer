@@ -8,8 +8,8 @@ namespace FirePlayCommon
 {
 	/*
 		ObjectPool
-		멀티스레드 환경에서 돌아갈 수 있도록 간단하게 짠 ObjectPool클래스.
-		Session의 정보를 기록하기 위하여 우선 제작.
+		멀티스레드 환경에서 돌아갈 수 있도록 짠 ObjectPool클래스.
+		Session의 정보를 기록하기 위하여 우선 간단하게 제작.
 	*/
 	template<class T>
 	class ObjectPool
@@ -17,7 +17,7 @@ namespace FirePlayCommon
 	public:
 
 		ObjectPool() {};
-		~ObjectPool() {};
+		~ObjectPool() { Release(); };
 
 		void Init(const int poolSize);
 		void Release();
@@ -34,13 +34,14 @@ namespace FirePlayCommon
 
 	private:
 
+		bool _isInitialized = false;
+
 		std::mutex _poolMutex;
 		std::vector<std::unique_ptr<T>> _pool;
-
-		std::mutex _poolIndexMutex;
 		std::deque<int> _poolIndex;
 	};
 
+	// 오브젝트 풀 사이즈의 크기를 이용하여 초기화를 해주어야 한다.
 	template<class T>
 	inline void ObjectPool<T>::Init(const int poolSize)
 	{
@@ -51,16 +52,19 @@ namespace FirePlayCommon
 			_pool.emplace_back(std::make_unique<T>());
 			_poolIndex.push_back(i);
 		}
+
+		_isInitialized = true;
 	}
 
 	template<class T>
 	inline void ObjectPool<T>::Release()
 	{
-		std::lock_guard<std::mutex> _idxLock(_poolIndexMutex);
+		_isInitialized = false;
+
+		std::lock_guard<std::mutex> releaseLock(_poolMutex);
 		_pool.clear();
 		_pool.shrink_to_fit();
 
-		std::lock_guard<std::mutex> _idxLock(_poolMutex);
 		_poolIndex.clear();
 		_poolIndex.shrink_to_fit();
 	}
@@ -68,7 +72,9 @@ namespace FirePlayCommon
 	template<class T>
 	inline int ObjectPool<T>::GetTag()
 	{
-		std::lock_guard<std::mutex> _idxLock(_poolIndexMutex);
+		if (!_isInitialized) return -1;
+
+		std::lock_guard<std::mutex> tagLock(_poolMutex);
 		if (_poolIndex.empty())
 		{
 			return -1;
@@ -83,42 +89,52 @@ namespace FirePlayCommon
 	template<class T>
 	inline void ObjectPool<T>::ReleaseTag(const int tag)
 	{
-		std::lock_guard<std::mutex> _idxLock(_poolIndexMutex);
+		if (!_isInitialized) return;
+
+		std::lock_guard<std::mutex> tagLock(_poolMutex);
 		_poolIndex.push_back(tag);
 	}
 
 	template<class T>
 	inline int ObjectPool<T>::GetSize()
 	{
-		std::lock_guard<std::mutex> _poolLock(_poolMutex);
+		if (!_isInitialized) return -1;
+
+		std::lock_guard<std::mutex> sizeLock(_poolMutex);
 		return _pool.size();
 	}
 
 	template<class T>
 	inline T & ObjectPool<T>::begin()
 	{
-		std::lock_guard<std::mutex> _poolLock(_poolMutex);
+		if (!_isInitialized) return -1;
+
+		std::lock_guard<std::mutex> poolLock(_poolMutex);
 		return _pool.begin();
 	}
 
 	template<class T>
 	inline T & ObjectPool<T>::end()
 	{
-		std::lock_guard<std::mutex> _poolLock(_poolMutex);
+		if (!_isInitialized) return -1;
+
+		std::lock_guard<std::mutex> poolLock(_poolMutex);
 		return _pool.end();
 	}
 
 	template<class T>
 	inline T & ObjectPool<T>::operator[](const int idx)
 	{
-		std::lock_guard<std::mutex> _poolLock(_poolMutex);
+		std::lock_guard<std::mutex> poolLock(_poolMutex);
 		return *_pool[idx];
 	}
 
 	template<class T>
 	inline bool ObjectPool<T>::IsEmpty()
 	{
-		std::lock_guard<std::mutex> _poolLock(_poolMutex);
+		if (!_isInitialized) return true;
+
+		std::lock_guard<std::mutex> poolLock(_poolMutex);
 		return _pool.empty();
 	}
 }
