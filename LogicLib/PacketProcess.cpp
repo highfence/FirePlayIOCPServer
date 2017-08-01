@@ -53,6 +53,8 @@ namespace FirePlayLogic
 			return;
 		}
 
+		_logger->Write(LogType::LOG_DEBUG, "%s | PacketId(%d) is BroadCast", __FUNCTION__, static_cast<int>(packetId));
+
 		// 함수목록들을 실행시켜준다.
 		for (auto& function : subscribedFuctions->second)
 		{
@@ -94,8 +96,6 @@ namespace FirePlayLogic
 
 		Subscribe((short)FirePlayCommon::PACKET_ID::LOGIN_IN_REQ,
 			std::bind(&PacketProcess::login, this, std::placeholders::_1));
-
-		_logger->Write(LogType::LOG_DEBUG, "%s | RegistFunc", __FUNCTION__);
 	}
 
 	ERROR_CODE PacketProcess::ntfSysConnectSession(std::shared_ptr<RecvPacketInfo> packetInfo)

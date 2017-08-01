@@ -167,6 +167,7 @@ namespace FirePlayNetwork
 	bool IOCPNetwork::startServer()
 	{
 		// 세팅된 소켓을 listen해준다.
+		//auto retval = listen(_serverSocket, SOMAXCONN);
 		auto retval = listen(_serverSocket, _serverInfo.Backlog);
 		if (retval != 0)
 		{
@@ -377,6 +378,8 @@ namespace FirePlayNetwork
 				_logger->Write(LogType::LOG_ERROR, "%s | Client accpet failed", __FUNCTION__);
 				continue;
 			}
+
+			_logger->Write(LogType::LOG_INFO, "%s | Client Accept, Socket FD(%I64u)", __FUNCTION__, _serverSocket);
 
 			// 풀에서 Session 하나를 받아 정보를 기입해준다.
 			auto newTag = _sessionPool.GetTag();
