@@ -34,7 +34,7 @@ namespace FirePlayNetwork
 
 		void Init(
 			ConsoleLogger    * logger,
-			const ServerInfo * serverInfo,
+			ServerInfo		 * serverInfo,
 			PacketQueue      * recvPacketQueue,
 			PacketQueue      * sendPacketQueue);
 		void Stop();
@@ -63,7 +63,7 @@ namespace FirePlayNetwork
 		SOCKET          _serverSocket = INVALID_SOCKET;
 		HANDLE          _iocpHandle   = INVALID_HANDLE_VALUE;
 		ConsoleLogger * _logger       = nullptr;
-		ServerInfo    * _serverInfo   = nullptr;
+		ServerInfo		_serverInfo;
 
 		using SessionPool = FirePlayCommon::ObjectPool<SessionInfo>;
 		SessionPool _sessionPool;
@@ -79,7 +79,7 @@ namespace FirePlayNetwork
 		public:
 			static IOCPNetwork * Create(
 				ConsoleLogger    * logger,
-				const ServerInfo * serverInfo,
+				ServerInfo		 * serverInfo,
 				PacketQueue      * recvPacketQueue,
 				PacketQueue      * sendPacketQueue)
 			{

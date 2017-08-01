@@ -3,8 +3,13 @@
 
 namespace FirePlayCommon
 {
-	typedef struct ServerInfo
+	class ServerInfo
 	{
+	public :
+
+		ServerInfo() {};
+		~ServerInfo() {};
+
 		unsigned short Port = 0;
 		int Backlog = 0;
 

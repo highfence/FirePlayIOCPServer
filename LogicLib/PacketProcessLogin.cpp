@@ -1,3 +1,4 @@
+
 #include "PacketProcess.h"
 
 #include "../NetworkLib/IOCPNetwork.h"
@@ -6,6 +7,7 @@
 #include "../Common/ErrorCode.h"
 #include "../Common/PacketID.h"
 #include "../Common/Packet.h"
+#include "../Common/ConsoleLogger.h"
 
 #include "ConnectedUserManager.h"
 #include "UserManager.h"
@@ -16,6 +18,8 @@ namespace FirePlayLogic
 {
 	ERROR_CODE PacketProcess::login(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
+		_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Login Func Entry", __FUNCTION__);
+
 		FirePlayCommon::PktLogInRes resPkt;
 		auto reqPkt = (FirePlayCommon::PktLogInReq*)packetInfo->pData;
 
@@ -45,5 +49,4 @@ namespace FirePlayLogic
 	{
 		return ERROR_CODE();
 	}
-
 }

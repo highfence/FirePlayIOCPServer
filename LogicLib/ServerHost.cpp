@@ -28,7 +28,7 @@ namespace FirePlayLogic
 		_sendQueue = new PacketQueue();
 
 		// 네트워크 클래스 생성.
-		//auto iocpInstance = IOCPNetwork::Factory::Create(_logger.get(), _serverInfo.get(), _recvQueue.get(), _sendQueue.get());
+		//auto iocpInstance = IOCPNetwork::Factory::Create(_logger.get(), _serverInfo->get(), _recvQueue.get(), _sendQueue.get());
 		//_iocpNetwork = std::make_unique<IOCPNetwork>(std::move(iocpInstance));
 		_iocpNetwork = std::make_unique<IOCPNetwork>();
 		_iocpNetwork->Init(_logger.get(), _serverInfo.get(), _recvQueue, _sendQueue);
@@ -42,6 +42,7 @@ namespace FirePlayLogic
 		_packetProcess = std::make_unique<PacketProcess>();
 		_packetProcess->Init(_logger.get(), _userManager.get(), _lobbyManager.get(), _recvQueue, _sendQueue);
 
+		_isRun = true;
 		return ERROR_CODE::NONE;
 	}
 

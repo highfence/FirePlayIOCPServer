@@ -1,3 +1,4 @@
+
 #include "IOCPNetwork.h"
 
 #include <memory>
@@ -23,7 +24,7 @@ namespace FirePlayNetwork
 {
 	void IOCPNetwork::Init(
 		ConsoleLogger    * logger,
-		const ServerInfo * serverInfo,
+		ServerInfo		 * serverInfo,
 		PacketQueue      * recvPacketQueue,
 		PacketQueue      * sendPacketQueue)
 	{
@@ -35,10 +36,12 @@ namespace FirePlayNetwork
 		_logger = logger;
 		_recvPacketQueue = recvPacketQueue;
 		_sendPacketQueue = sendPacketQueue;
-		memcpy_s(_serverInfo, sizeof(ServerInfo), serverInfo, sizeof(ServerInfo));
+		memcpy(&_serverInfo, serverInfo, sizeof(ServerInfo));
 
-		_sessionPool.Init(_serverInfo->Backlog);
-		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port -> %d, Backlog -> %d", _serverInfo->Port, _serverInfo->Backlog);
+		// 클라이언트 세션 풀을 할당한다.
+		_sessionPool.Init(_serverInfo.Backlog);
+
+		_logger->Write(LogType::LOG_INFO, "IOCPNetwork Create :: Port(%d), Backlog(%d)", _serverInfo.Port, _serverInfo.Backlog);
 
 		// 네트워크단을 세팅한다.
 		if (!initNetwork())
@@ -78,6 +81,7 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::ForcingClose(const int sessionIdx)
 	{
+		// 닫으려는 세션이 활성화 되어 있지 않은 상태면 그냥 리턴한다.
 		if (_sessionPool[sessionIdx].IsConnected() == false)
 		{
 			return;
@@ -90,6 +94,7 @@ namespace FirePlayNetwork
 	{
 #pragma region Start Network Functions
 
+		// WSA 소켓을 활성화 한다.
 		auto initWSA = [this]() -> bool
 		{
 			WSADATA wsaData;
@@ -102,6 +107,7 @@ namespace FirePlayNetwork
 			return true;
 		};
 
+		// Io Completion Port를 생성한다.
 		auto createIOCP = [this]() -> bool
 		{
 			_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -113,9 +119,10 @@ namespace FirePlayNetwork
 			return true;
 		};
 
+		// Listen 소켓을 생성한다.
 		auto createListenSocket = [this]() -> bool
 		{
-			_serverSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+			_serverSocket = WSASocket(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
 			if (_serverSocket == INVALID_SOCKET)
 			{
 				_logger->Write(LogType::LOG_ERROR, "%s | Listen Socket Initialize Failed", __FUNCTION__);
@@ -124,13 +131,14 @@ namespace FirePlayNetwork
 			return true;
 		};
 
+		// Socket에 설정을 바인딩한다.
 		auto bindSocket = [this]() -> bool
 		{
 			SOCKADDR_IN socketAddr;
 			ZeroMemory(&socketAddr, sizeof(socketAddr));
 			socketAddr.sin_family = AF_INET;
 			socketAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-			socketAddr.sin_port = htons(_serverInfo->Port);
+			socketAddr.sin_port = htons(_serverInfo.Port);
 
 			auto retval = bind(_serverSocket, (sockaddr*)&socketAddr, sizeof(socketAddr));
 			if (retval != 0)
@@ -145,8 +153,8 @@ namespace FirePlayNetwork
 
 		bool retval = true;
 
-		retval = (initWSA()              && retval);
 		retval = (createIOCP()           && retval);
+		retval = (initWSA()              && retval);
 		retval = (createListenSocket()   && retval);
 		retval = (bindSocket()           && retval);
 
@@ -156,12 +164,13 @@ namespace FirePlayNetwork
 	bool IOCPNetwork::startServer()
 	{
 		// 세팅된 소켓을 listen해준다.
-		auto retval = listen(_serverSocket, _serverInfo->Backlog);
+		auto retval = listen(_serverSocket, _serverInfo.Backlog);
 		if (retval != 0)
 		{
 			_logger->Write(LogType::LOG_ERROR, "%s | Socket Listen Failed.", __FUNCTION__);
 			return false;
 		}
+		_logger->Write(LogType::LOG_INFO, "%s | Listen. ServerSocketFd(%I64u)", __FUNCTION__, _serverSocket);
 		
 		// listen 쓰레드를 활성화한다.
 		auto listenThread = std::thread(std::bind(&IOCPNetwork::listenThreadFunc, this));
@@ -208,14 +217,17 @@ namespace FirePlayNetwork
 		return retval;
 	}
 
+	// 지정한 세션을 닫아주는 함수.
 	void IOCPNetwork::closeSession(const FirePlayCommon::SOCKET_CLOSE_CASE closeCase, const SOCKET socket, const int sesseionIdx)
 	{
+		// 세션 풀이 비어서 종료하는 경우에는 Session을 따로 설정해 줄 필요 없이 closesocket만 호출.
 		if (closeCase == FirePlayCommon::SOCKET_CLOSE_CASE::SESSION_POOL_EMPTY)
 		{
 			closesocket(socket);
 			return;
 		}
 
+		// 지정한 세션이 활성화 상태가 아니라면 입력값 오류로 보고 바로 리턴.
 		if (_sessionPool[sesseionIdx].IsConnected() == false)
 		{
 			return;
@@ -255,6 +267,7 @@ namespace FirePlayNetwork
 				_logger->Write(LogType::LOG_ERROR, "%s | Iocp GetQueuedCompletionStatus Failed", __FUNCTION__);
 				continue;
 			}
+			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | GetQueuedCompletionStatus Complete", __FUNCTION__);
 
 			auto sessionTag = ioInfo->SessionTag;
 			SessionInfo session = _sessionPool[sessionTag];
@@ -314,14 +327,14 @@ namespace FirePlayNetwork
 				}
 
 				// 남은 데이터를 버퍼의 맨 앞으로 당겨준다.
-				memcpy_s(session._recvBuffer, _serverInfo->MaxClientRecvBufferSize, headerPosition, remainDataSize);
+				memcpy_s(session._recvBuffer, _serverInfo.MaxClientRecvBufferSize, headerPosition, remainDataSize);
 
 				// 만들 수 있는 패킷은 다 만들었으므로, Recv를 건다.
 				ZeroMemory(&ioInfo->Overlapped, sizeof(OVERLAPPED));
 
 				// remainDataSize만큼은 띄고 받는다.
 				ioInfo->Wsabuf.buf = session._recvBuffer + remainDataSize;
-				ioInfo->Wsabuf.len = _serverInfo->MaxClientRecvBufferSize - remainDataSize;
+				ioInfo->Wsabuf.len = _serverInfo.MaxClientRecvBufferSize - remainDataSize;
 				ioInfo->Status = IOInfoStatus::READ;
 
 				DWORD recvSize = 0;
@@ -340,6 +353,7 @@ namespace FirePlayNetwork
 	{
 #pragma region IOCP Function
 
+		// 만들어진 Io Completion Port에 들어온 소켓을 정보에 묶는다.
 		auto BindSessionToIOCP = [this](SessionInfo* bindingSession)
 		{
 			CreateIoCompletionPort((HANDLE)bindingSession->_socket, _iocpHandle, (ULONG_PTR)nullptr, 0);
@@ -353,20 +367,19 @@ namespace FirePlayNetwork
 			ZeroMemory(&clientAddr, sizeof(clientAddr));
 			int addrlen = sizeof(clientAddr);
 
-			auto newClient = accept(_serverSocket, (SOCKADDR*)&clientAddr, &addrlen);
+			// 여기서 Blocking되어 다른 클라이언트의 accept를 기다린다.
+			SOCKET newClient = accept(_serverSocket, (SOCKADDR*)&clientAddr, &addrlen);
 			if (newClient == INVALID_SOCKET)
 			{
 				_logger->Write(LogType::LOG_ERROR, "%s | Client accpet failed", __FUNCTION__);
 				continue;
 			}
 
-			// TODO :: 동접자 초과했을 경우 처리.
-
 			// 풀에서 Session 하나를 받아 정보를 기입해준다.
 			auto newTag = _sessionPool.GetTag();
 			if (newTag < 0)
 			{
-				_logger->Write(LogType::LOG_WARN, "%s | Client Session Pool", __FUNCTION__);
+				_logger->Write(LogType::LOG_WARN, "%s | Client Session Pool Full", __FUNCTION__);
 				continue;
 			}
 
@@ -377,7 +390,7 @@ namespace FirePlayNetwork
 			auto newIOCPInfo = new IO정보();
 			ZeroMemory(&newIOCPInfo->Overlapped, sizeof(OVERLAPPED));
 			newIOCPInfo->Wsabuf.buf = newSession._recvBuffer;
-			newIOCPInfo->Wsabuf.len = _serverInfo->MaxClientRecvBufferSize;
+			newIOCPInfo->Wsabuf.len = _serverInfo.MaxClientRecvBufferSize;
 			newIOCPInfo->Status = IOInfoStatus::READ;
 			newIOCPInfo->SessionTag = newTag;
 
