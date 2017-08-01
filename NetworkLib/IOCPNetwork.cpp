@@ -271,16 +271,18 @@ namespace FirePlayNetwork
 				_logger->Write(LogType::LOG_ERROR, "%s | Iocp GetQueuedCompletionStatus Failed", __FUNCTION__);
 				continue;
 			}
-			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | GetQueuedCompletionStatus Complete", __FUNCTION__);
 
 			auto sessionTag = ioInfo->SessionTag;
 			SessionInfo session = _sessionPool[sessionTag];
+
+			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Socket FD(%I64u) request complete", __FUNCTION__, session._socket);
 
 			if (ioInfo->Status == IOInfoStatus::READ)
 			{
 				// 종료 검사.
 				if (transferredByte == 0)
 				{
+					_logger->Write(LogType::LOG_INFO, "Socket FD(%I64u), Session(%d) connect ended", session._socket, sessionTag);
 					session.Clear();
 					_sessionPool.ReleaseTag(sessionTag);
 
@@ -289,7 +291,6 @@ namespace FirePlayNetwork
 					closeSessionInfo.SessionIndex = sessionTag;
 					_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
 
-					_logger->Write(LogType::LOG_INFO, "Session idx %d connect ended", sessionTag);
 					continue;
 				}
 
@@ -343,7 +344,15 @@ namespace FirePlayNetwork
 
 				DWORD recvSize = 0;
 				DWORD flags = 0;
-				WSARecv(session._socket, &ioInfo->Wsabuf, 1, &recvSize, &flags, &ioInfo->Overlapped, nullptr);
+				auto retval = WSARecv(session._socket, &ioInfo->Wsabuf, 1, &recvSize, &flags, &ioInfo->Overlapped, nullptr);
+
+				if (SOCKET_ERROR == retval)
+				{
+					if (WSAGetLastError() != WSA_IO_PENDING)
+					{
+						_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error!", __FUNCTION__);
+					}
+				}
 			}
 			// TODO 
 			else
@@ -407,7 +416,16 @@ namespace FirePlayNetwork
 			DWORD flags = 0;
 
 			// 리시브를 걸어놓는다.
-			WSARecv(newSession._socket, &newIOCPInfo->Wsabuf, 1, &recvSize, &flags, &newIOCPInfo->Overlapped, NULL);
+			auto retval = WSARecv(newSession._socket, &newIOCPInfo->Wsabuf, 1, &recvSize, &flags, &newIOCPInfo->Overlapped, NULL);
+			_logger->Write(LogType::LOG_DEBUG, "%s | Waiting for recv massage from socket(%I64u)", __FUNCTION__, newSession._socket);
+
+			if (SOCKET_ERROR == retval)
+			{
+				if (WSAGetLastError() != WSA_IO_PENDING)
+				{
+					_logger->Write(LogType::LOG_ERROR, "%s | WSARecv Error!", __FUNCTION__);
+				}
+			}
 		}
 	}
 
@@ -428,7 +446,10 @@ namespace FirePlayNetwork
 			
 			send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
 			send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
+
 			_sendPacketQueue->Pop();
+			
+			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Packet ID(%d)", __FUNCTION__, destSession._socket, static_cast<int>(sendPacket->PacketId));
 		}
 	}
 }
