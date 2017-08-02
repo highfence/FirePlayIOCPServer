@@ -33,7 +33,7 @@ namespace FirePlayLogic
 			_logger->Write(LogType::LOG_ERROR, "%s | AddUser Failed, ERROR_CODE(%d)", __FUNCTION__, static_cast<int>(addRet));
 		}
 
-		// ERROR :: 이 이상 진행 불가. 데드락?
+		// ERROR :: 이 이상 진행 불가. 데드락? ConnectedUserList(_userList)에 유저를 추가해주는 코드가 필요.
 		_connectedUserManager->SetLogin(packetInfo->SessionIndex);
 
 		resPkt.ErrorCode = (short)addRet;
