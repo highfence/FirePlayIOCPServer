@@ -289,9 +289,10 @@ namespace FirePlayNetwork
 			}
 
 			auto sessionTag = ioInfo->SessionTag;
-			SessionInfo session = _sessionPool[sessionTag];
-
+			auto& session = _sessionPool[sessionTag];
+		
 			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Socket FD(%I64u), Session(%d) request complete", __FUNCTION__, session._socket, sessionTag);
+
 
 			if (ioInfo->Status == IOInfoStatus::READ)
 			{
@@ -417,7 +418,7 @@ namespace FirePlayNetwork
 
 			_logger->Write(LogType::LOG_INFO, "%s | Client Accept, Socket FD(%I64u) Session(%d)", __FUNCTION__, _serverSocket, newTag);
 
-			auto newSession = _sessionPool[newTag];
+			auto& newSession = _sessionPool[newTag];
 			newSession._tag = newTag;
 			newSession._socket = newClient;
 			newSession._socketAddress = clientAddr;
