@@ -291,7 +291,7 @@ namespace FirePlayNetwork
 			auto sessionTag = ioInfo->SessionTag;
 			SessionInfo session = _sessionPool[sessionTag];
 
-			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Socket FD(%I64u) request complete", __FUNCTION__, session._socket);
+			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Socket FD(%I64u), Session(%d) request complete", __FUNCTION__, session._socket, sessionTag);
 
 			if (ioInfo->Status == IOInfoStatus::READ)
 			{
@@ -406,8 +406,6 @@ namespace FirePlayNetwork
 				continue;
 			}
 
-			_logger->Write(LogType::LOG_INFO, "%s | Client Accept, Socket FD(%I64u)", __FUNCTION__, _serverSocket);
-
 			// 풀에서 Session 하나를 받아 정보를 기입해준다.
 			auto newTag = _sessionPool.GetTag();
 			if (newTag < 0)
@@ -416,6 +414,8 @@ namespace FirePlayNetwork
 				// TODO :: 여기서 continue말고 동접자 최대일 경우 처리해주어야 함.
 				continue;
 			}
+
+			_logger->Write(LogType::LOG_INFO, "%s | Client Accept, Socket FD(%I64u) Session(%d)", __FUNCTION__, _serverSocket, newTag);
 
 			auto newSession = _sessionPool[newTag];
 			newSession._tag = newTag;
@@ -431,6 +431,7 @@ namespace FirePlayNetwork
 
 			// IOCP에 새로운 세션을 등록해준다.
 			bindSessionToIOCP(&newSession);
+			++_connectedSessionCount;
 
 			DWORD recvSize = 0;
 			DWORD flags = 0;
