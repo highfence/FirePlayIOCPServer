@@ -6,10 +6,10 @@
 #include "../Common/PacketID.h"
 #include "../Common/Define.h"
 
-using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
-
 namespace FirePlayNetwork
 {
+	using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
+
 	/*
 		PacketQueue
 		멀티쓰레드 환경에서 돌아가는 큐를 지원하기 위하여 만든 클래스.

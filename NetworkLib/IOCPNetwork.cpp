@@ -371,7 +371,7 @@ namespace FirePlayNetwork
 					}
 				}
 			}
-			// TODO 
+			// TODO :: IOInfoStatus::WRITE일 때 처리.
 			else
 			{
 
@@ -379,12 +379,13 @@ namespace FirePlayNetwork
 		}
 	}
 
+	// 새로운 접속자를 기다리고, 접속자를 세션에 등록해주는 쓰레드 함수.
 	void IOCPNetwork::listenThreadFunc()
 	{
 #pragma region IOCP Function
 
 		// 만들어진 Io Completion Port에 들어온 소켓을 정보에 묶는다.
-		auto BindSessionToIOCP = [this](SessionInfo* bindingSession)
+		auto bindSessionToIOCP = [this](SessionInfo* bindingSession)
 		{
 			CreateIoCompletionPort((HANDLE)bindingSession->_socket, _iocpHandle, (ULONG_PTR)nullptr, 0);
 		};
@@ -412,6 +413,7 @@ namespace FirePlayNetwork
 			if (newTag < 0)
 			{
 				_logger->Write(LogType::LOG_WARN, "%s | Client Session Pool Full", __FUNCTION__);
+				// TODO :: 여기서 continue말고 동접자 최대일 경우 처리해주어야 함.
 				continue;
 			}
 
@@ -428,7 +430,7 @@ namespace FirePlayNetwork
 			newIOCPInfo->SessionTag = newTag;
 
 			// IOCP에 새로운 세션을 등록해준다.
-			BindSessionToIOCP(&newSession);
+			bindSessionToIOCP(&newSession);
 
 			DWORD recvSize = 0;
 			DWORD flags = 0;
@@ -452,10 +454,12 @@ namespace FirePlayNetwork
 		}
 	}
 
+	// sendPacketQueue를 들여다보며 보낼 패킷이 있으면 보내주는 쓰레드 함수.
 	void IOCPNetwork::sendThreadFunc()
 	{
 		while (true)
 		{
+			// 보낼 패킷이 없다면,
 			if (_sendPacketQueue->IsEmpty())
 			{
 				// 양보한다.
