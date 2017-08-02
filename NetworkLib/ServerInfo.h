@@ -55,5 +55,4 @@ namespace FirePlayNetwork
 		char *    _sendBuffer = nullptr;
 		int       _sendSize = 0;
 	};
-
 }

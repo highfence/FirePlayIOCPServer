@@ -33,11 +33,13 @@ namespace FirePlayNetwork
 
 		void Pop()
 		{
+			std::lock_guard<std::mutex> lock(_mutex);
 			_packetDeque.pop_front();
 		}
 
 		void Push(std::shared_ptr<RecvPacketInfo> recvPacket)
 		{
+			std::lock_guard<std::mutex> lock(_mutex);
 			_packetDeque.emplace_back(recvPacket);
 		}
 
