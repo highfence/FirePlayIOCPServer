@@ -33,10 +33,10 @@ namespace FirePlayNetwork
 		// 클라이언트 세션 풀을 초기화.
 		auto sessionPoolInitialize = [this]()
 		{
-			_sessionPool.Init(_serverInfo.Backlog);
+			_sessionPool.Init(_serverInfo.MaxClientCount);
 
 			// 오브젝트 풀에 할당된 Session마다 설정.
-			for (int i = 0; i < _serverInfo.Backlog; ++i)
+			for (int i = 0; i < _serverInfo.MaxClientCount; ++i)
 			{
 				_sessionPool[i]._tag = i;
 				_sessionPool[i]._recvBuffer = new char[_serverInfo.MaxClientRecvBufferSize];

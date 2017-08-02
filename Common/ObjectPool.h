@@ -101,7 +101,7 @@ namespace FirePlayCommon
 		if (!_isInitialized) return -1;
 
 		std::lock_guard<std::mutex> sizeLock(_poolMutex);
-		return _pool.size();
+		return static_cast<int>(_pool.size());
 	}
 
 	template<class T>

@@ -6,6 +6,7 @@
 #include <memory>
 #include "../Common/Define.h"
 #include "../NetworkLib/IOCPNetwork.h"
+#include "../NetworkLib/PacketQueue.h"
 
 namespace FirePlayLogic
 {
@@ -22,6 +23,8 @@ namespace FirePlayLogic
 	};
 
 	using ConsoleLogger = FirePlayCommon::ConsoleLogger;
+	using ServerInfo = FirePlayCommon::ServerInfo;
+	using PacketQueue = FirePlayNetwork::PacketQueue;
 
 	// TODO :: 추가 구현 필요
 	class ConnectedUserManager
@@ -31,12 +34,18 @@ namespace FirePlayLogic
 		ConnectedUserManager() {};
 		~ConnectedUserManager() {};
 
+		void Init(const int maxSessionCount, ConsoleLogger * logger, PacketQueue * recvQueue, PacketQueue * sendQueue, ServerInfo * config);
+
 		void SetConnectSession(const int sessionIdx);
 		void SetLogin(const int sessionIdx);
 
 	private :
 
 		ConsoleLogger * _logger;
+		PacketQueue * _recvQueue;
+		PacketQueue * _sendQueue;
 		std::vector<std::shared_ptr<ConnectedUser>> _userList;
+
+		bool _isLoginCheckReadyed = false;
 	};
 }

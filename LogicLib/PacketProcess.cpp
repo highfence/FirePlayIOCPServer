@@ -22,7 +22,8 @@ namespace FirePlayLogic
 		UserManager   * userManager,
 		LobbyManager  * lobbyManager,
 		PacketQueue   * recvQueue,
-		PacketQueue   * sendQueue)
+		PacketQueue   * sendQueue,
+		ServerInfo    * serverInfo)
 	{
 		if (logger    == nullptr ||
 			recvQueue == nullptr ||
@@ -36,6 +37,13 @@ namespace FirePlayLogic
 		_lobbyManager = lobbyManager;
 		_recvQueue    = recvQueue;
 		_sendQueue    = sendQueue;
+
+		_connectedUserManager->Init(
+			serverInfo->MaxClientCount,
+			_logger,
+			_recvQueue,
+			_sendQueue,
+			serverInfo);
 
 		registFunctions();
 	}

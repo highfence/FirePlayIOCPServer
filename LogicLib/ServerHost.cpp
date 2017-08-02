@@ -40,7 +40,7 @@ namespace FirePlayLogic
 		// 패킷 프로세스 생성.
 		//_packetProcess = std::make_unique<PacketProcess>(PacketProcess::Factory::Create(_logger.get(), _userManager.get(), _lobbyManager.get(), _recvQueue.get(), _sendQueue.get()));
 		_packetProcess = std::make_unique<PacketProcess>();
-		_packetProcess->Init(_logger.get(), _userManager.get(), _lobbyManager.get(), _recvQueue, _sendQueue);
+		_packetProcess->Init(_logger.get(), _userManager.get(), _lobbyManager.get(), _recvQueue, _sendQueue, _serverInfo.get());
 
 		_isRun = true;
 		return ERROR_CODE::NONE;

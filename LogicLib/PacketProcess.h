@@ -23,6 +23,7 @@ namespace FirePlayLogic
 	using RecvPacketInfo = FirePlayCommon::RecvPacketInfo;
 	using PACKET_ID = FirePlayCommon::PACKET_ID;
 	using ERROR_CODE = FirePlayCommon::ERROR_CODE;
+	using ServerInfo = FirePlayCommon::ServerInfo;
 
 	using PacketQueue = FirePlayNetwork::PacketQueue;
 
@@ -44,7 +45,8 @@ namespace FirePlayLogic
 			UserManager   * userManager,
 			LobbyManager  * lobbyManager,
 			PacketQueue   * recvQueue,
-			PacketQueue   * sendQueue);
+			PacketQueue   * sendQueue,
+			ServerInfo    * serverInfo);
 		void BroadCast(std::shared_ptr<RecvPacketInfo> packetInfo);
 		void Subscribe(short interestedPacketId, PacketFunc functor);
 
@@ -112,7 +114,7 @@ namespace FirePlayLogic
 					return nullptr;
 				}
 
-				product->Init(logger, userManager, lobbyManager, recvQueue, sendQueue);
+				//product->Init(logger, userManager, lobbyManager, recvQueue, sendQueue);
 				return product;
 			}
 		};

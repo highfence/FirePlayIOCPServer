@@ -15,7 +15,7 @@
 namespace FirePlayCommon
 {
 	enum class LogType;
-	struct ServerInfo;
+	class ServerInfo;
 	class ConsoleLogger;
 }
 
