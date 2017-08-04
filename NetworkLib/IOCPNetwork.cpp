@@ -373,10 +373,7 @@ namespace FirePlayNetwork
 				}
 			}
 			// TODO :: IOInfoStatus::WRITE일 때 처리.
-			else
-			{
-
-			}
+			else {}
 		}
 	}
 
@@ -398,6 +395,8 @@ namespace FirePlayNetwork
 			SOCKADDR_IN clientAddr;
 			ZeroMemory(&clientAddr, sizeof(clientAddr));
 			int addrlen = sizeof(clientAddr);
+
+			_logger->Write(LogType::LOG_DEBUG, "%s | Waiting For Other Client...", __FUNCTION__);
 
 			// 여기서 Blocking되어 다른 클라이언트의 accept를 기다린다.
 			SOCKET newClient = accept(_serverSocket, (SOCKADDR*)&clientAddr, &addrlen);

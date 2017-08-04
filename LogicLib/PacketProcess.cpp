@@ -38,11 +38,12 @@ namespace FirePlayLogic
 		_recvQueue    = recvQueue;
 		_sendQueue    = sendQueue;
 
+		_connectedUserManager = std::make_unique<ConnectedUserManager>();
 		_connectedUserManager->Init(
 			serverInfo->MaxClientCount,
-			_logger,
-			_recvQueue,
-			_sendQueue,
+			logger,
+			recvQueue,
+			sendQueue,
 			serverInfo);
 
 		registFunctions();
