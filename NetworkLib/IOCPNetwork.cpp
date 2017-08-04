@@ -190,7 +190,7 @@ namespace FirePlayNetwork
 			_logger->Write(LogType::LOG_ERROR, "%s | Socket Listen Failed.", __FUNCTION__);
 			return false;
 		}
-		_logger->Write(LogType::LOG_INFO, "%s | Listen. ServerSocketFd(%I64u)", __FUNCTION__, _serverSocket);
+		_logger->Write(LogType::LOG_INFO, "%s | Listen. ServerSocketFd(%I64u), BackLog(%d)", __FUNCTION__, _serverSocket, _serverInfo.Backlog);
 		
 		// listen 쓰레드를 활성화한다.
 		auto listenThread = std::thread(std::bind(&IOCPNetwork::listenThreadFunc, this));
@@ -393,7 +393,6 @@ namespace FirePlayNetwork
 		while (true)
 		{
 			SOCKADDR_IN clientAddr;
-			ZeroMemory(&clientAddr, sizeof(clientAddr));
 			int addrlen = sizeof(clientAddr);
 
 			_logger->Write(LogType::LOG_DEBUG, "%s | Waiting For Other Client...", __FUNCTION__);
