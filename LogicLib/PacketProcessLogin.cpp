@@ -22,7 +22,6 @@ namespace FirePlayLogic
 	{
 		_logger->Write(LogType::LOG_DEBUG, "%s | Login Func Entry", __FUNCTION__);
 
-		FirePlayCommon::PktLogInRes resPkt;
 		auto reqPkt = (FirePlayCommon::PktLogInReq*)packetInfo->pData;
 
 		auto addRet = _userManager->AddUser(packetInfo->SessionIndex, reqPkt->szID);
@@ -36,6 +35,7 @@ namespace FirePlayLogic
 
 		_connectedUserManager->SetLogin(packetInfo->SessionIndex);
 
+		FirePlayCommon::PktLogInRes resPkt;
 		resPkt.ErrorCode = (short)addRet;
 		_logger->Write(LogType::LOG_DEBUG, "%s | AddUser ERROR_CODE(%d)", __FUNCTION__, static_cast<int>(addRet));
 
@@ -48,7 +48,7 @@ namespace FirePlayLogic
 		_logger->Write(LogType::LOG_DEBUG, "%s | Make Send Packet(shared_ptr)", __FUNCTION__);
 
 		_sendQueue->Push(sendPacket);
-		_logger->Write(LogType::LOG_DEBUG, "%s | Push Packet(%d) to SendQueue", __FUNCTION__, sendPacket->PacketId);
+		_logger->Write(LogType::LOG_DEBUG, "%s | Push Packet(%d) Session(%d) to SendQueue", __FUNCTION__, sendPacket->PacketId, sendPacket->SessionIndex);
 
 		return ERROR_CODE::NONE;
 	}

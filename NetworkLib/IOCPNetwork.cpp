@@ -477,12 +477,17 @@ namespace FirePlayNetwork
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
-			send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
-			send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
+			char* sendChar = (char*)&sendHeader; 
+			strcat(sendChar, sendPacket->pData);
+
+			send(destSession._socket, sendChar, FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize, 0);
+
+			//send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
+			//send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
 
 			_sendPacketQueue->Pop();
 			
-			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Packet ID(%d)", __FUNCTION__, destSession._socket, static_cast<int>(sendPacket->PacketId));
+			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Session(%d), Packet ID(%d)", __FUNCTION__, destSession._socket, destSession._tag, static_cast<int>(sendPacket->PacketId));
 		}
 	}
 }
