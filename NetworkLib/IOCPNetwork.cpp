@@ -293,7 +293,6 @@ namespace FirePlayNetwork
 		
 			_logger->Write(FirePlayCommon::LogType::LOG_DEBUG, "%s | Socket FD(%I64u), Session(%d) request complete", __FUNCTION__, session._socket, sessionTag);
 
-
 			if (ioInfo->Status == IOInfoStatus::READ)
 			{
 				// 종료 검사.
@@ -337,6 +336,11 @@ namespace FirePlayNetwork
 						newPacket->SessionIndex = ioInfo->SessionTag;
 
 						_recvPacketQueue->Push(newPacket);
+						_logger->Write(LogType::LOG_DEBUG, "%s | Making New Packet ID(%d), BodySize(%d), Session(%d)",
+							__FUNCTION__,
+							header->Id,
+							bodySize,
+							ioInfo->SessionTag);
 
 						// 패킷을 만든 후, 다음 번 헤더 자리를 지정하고, 남은 데이터 사이즈를 갱신한다.
 						headerPosition += packetHeaderSize + bodySize;

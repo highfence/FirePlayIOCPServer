@@ -62,11 +62,14 @@ namespace FirePlayLogic
 		if (_packetFuncArray[recvPacket->PacketId] == nullptr)
 		{
 			_logger->Write(LogType::LOG_WARN, "%s | There is no function correspond to packet(%d)", __FUNCTION__, recvPacket->PacketId);
+			_recvQueue->Pop();
 			return;
 		}
 
 		// 대응하는 함수 호출.
+		_logger->Write(LogType::LOG_DEBUG, "%s | PacketId(%d) Function Called", __FUNCTION__, recvPacket->PacketId);
 		_packetFuncArray[recvPacket->PacketId];
+		_recvQueue->Pop();
 	}
 
 	void PacketProcess::registFunctions()

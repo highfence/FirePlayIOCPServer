@@ -41,14 +41,7 @@ namespace FirePlayCommon
 	struct RecvPacketInfo
 	{
 		RecvPacketInfo() = default;
-		~RecvPacketInfo()
-		{
-			if (pData != nullptr)
-			{
-				delete[] pData;
-				pData = nullptr;
-			}
-		}
+		~RecvPacketInfo() {};
 
 		int SessionIndex = 0;
 		short PacketId = 0;
