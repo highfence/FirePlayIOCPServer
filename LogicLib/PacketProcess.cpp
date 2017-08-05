@@ -68,6 +68,7 @@ namespace FirePlayLogic
 		for (auto& function : subscribedFuctions->second)
 		{
 			function(packetInfo);
+			_logger->Write(LogType::LOG_DEBUG, "Some Function ended");
 		}
 	}
 
@@ -94,7 +95,6 @@ namespace FirePlayLogic
 			return;
 		}
 
-		_logger->Write(LogType::LOG_DEBUG, "%s | BroadCast %d packet", __FUNCTION__, recvPacket->PacketId);
 		BroadCast(recvPacket);
 	}
 

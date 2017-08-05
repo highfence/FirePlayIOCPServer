@@ -467,6 +467,8 @@ namespace FirePlayNetwork
 				continue;
 			}
 
+			_logger->Write(LogType::LOG_DEBUG, "%s | SendThreadFunc Entry", __FUNCTION__);
+
 			std::shared_ptr<RecvPacketInfo> sendPacket = _sendPacketQueue->Peek();
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };

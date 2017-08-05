@@ -4,6 +4,7 @@
 #include "../NetworkLib/IOCPNetwork.h"
 #include "../NetworkLib/PacketQueue.h"
 
+#include "../Common/Define.h"
 #include "../Common/ErrorCode.h"
 #include "../Common/PacketID.h"
 #include "../Common/Packet.h"
@@ -33,20 +34,21 @@ namespace FirePlayLogic
 			_logger->Write(LogType::LOG_ERROR, "%s | AddUser Failed, ERROR_CODE(%d)", __FUNCTION__, static_cast<int>(addRet));
 		}
 
-		// ERROR :: 이 이상 진행 불가. 데드락? ConnectedUserList(_userList)에 유저를 추가해주는 코드가 필요.
 		_connectedUserManager->SetLogin(packetInfo->SessionIndex);
 
 		resPkt.ErrorCode = (short)addRet;
 		_logger->Write(LogType::LOG_DEBUG, "%s | AddUser ERROR_CODE(%d)", __FUNCTION__, static_cast<int>(addRet));
 
-		RecvPacketInfo sendPacket;
-		sendPacket.SessionIndex = packetInfo->SessionIndex;
-		sendPacket.PacketId = (short)PACKET_ID::LOGIN_IN_RES;
-		sendPacket.PacketBodySize = sizeof(FirePlayCommon::PktLogInRes);
-		sendPacket.pData = (char*)&resPkt;
+		std::shared_ptr<RecvPacketInfo> sendPacket;
+		sendPacket->SessionIndex = packetInfo->SessionIndex;
+		sendPacket->PacketId = (short)PACKET_ID::LOGIN_IN_RES;
+		sendPacket->PacketBodySize = sizeof(FirePlayCommon::PktLogInRes);
+		sendPacket->pData = (char*)&resPkt;
 
-		_logger->Write(LogType::LOG_DEBUG, "%s | Push Packet(%d) to SendQueue", __FUNCTION__, sendPacket.PacketId);
-		_sendQueue->Push(std::make_shared<RecvPacketInfo>(sendPacket));
+		_logger->Write(LogType::LOG_DEBUG, "%s | Make Send Packet(shared_ptr)", __FUNCTION__);
+
+		_sendQueue->Push(sendPacket);
+		_logger->Write(LogType::LOG_DEBUG, "%s | Push Packet(%d) to SendQueue", __FUNCTION__, sendPacket->PacketId);
 
 		return ERROR_CODE::NONE;
 	}

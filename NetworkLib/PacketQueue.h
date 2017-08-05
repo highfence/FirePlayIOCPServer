@@ -19,7 +19,12 @@ namespace FirePlayNetwork
 	public :
 
 		PacketQueue() = default;
-		~PacketQueue() = default;
+		~PacketQueue()
+		{
+			std::lock_guard<std::mutex> lock(_mutex);
+			_packetDeque.clear();
+			_packetDeque.shrink_to_fit();
+		}
 
 		std::shared_ptr<RecvPacketInfo> Peek()
 		{
