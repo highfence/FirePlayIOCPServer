@@ -263,13 +263,13 @@ namespace FirePlayNetwork
 
 	void IOCPNetwork::addPacketQueue(const int sessionIdx, const short pktId, const short bodySize, char * pDataPos)
 	{
-		RecvPacketInfo packetInfo;
-		packetInfo.SessionIndex = sessionIdx;
-		packetInfo.PacketId = pktId;
-		packetInfo.PacketBodySize = bodySize;
-		packetInfo.pData = pDataPos;
+		auto packetInfo = std::make_shared<RecvPacketInfo>();
+		packetInfo->SessionIndex = sessionIdx;
+		packetInfo->PacketId = pktId;
+		packetInfo->PacketBodySize = bodySize;
+		packetInfo->pData = pDataPos;
 
-		_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(packetInfo));
+		_recvPacketQueue->Push(packetInfo);
 	}
 
 	void IOCPNetwork::workerThreadFunc()
@@ -303,10 +303,10 @@ namespace FirePlayNetwork
 					session.Clear();
 					_sessionPool.ReleaseTag(sessionTag);
 
-					RecvPacketInfo closeSessionInfo;
-					closeSessionInfo.PacketId = (short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CLOSE_SESSION;
-					closeSessionInfo.SessionIndex = sessionTag;
-					_recvPacketQueue->Push(std::make_shared<RecvPacketInfo>(closeSessionInfo));
+					std::shared_ptr<RecvPacketInfo> closeSessionInfo = std::make_shared<RecvPacketInfo>();
+					closeSessionInfo->PacketId = (short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CLOSE_SESSION;
+					closeSessionInfo->SessionIndex = sessionTag;
+					_recvPacketQueue->Push(closeSessionInfo);
 
 					continue;
 				}
@@ -330,7 +330,7 @@ namespace FirePlayNetwork
 					if (packetHeaderSize + bodySize >= remainDataSize)
 					{
 						// 패킷을 만들어준다.
-						auto newPacket = std::make_shared<RecvPacketInfo>();
+						std::shared_ptr<RecvPacketInfo> newPacket = std::make_shared<RecvPacketInfo>();
 						newPacket->PacketId = header->Id;
 						newPacket->PacketBodySize = bodySize;
 						newPacket->pData = headerPosition + packetHeaderSize;

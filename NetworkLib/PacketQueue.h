@@ -45,10 +45,14 @@ namespace FirePlayNetwork
 		void Push(std::shared_ptr<RecvPacketInfo> recvPacket)
 		{
 			std::lock_guard<std::mutex> lock(_mutex);
-			_packetDeque.emplace_back(recvPacket);
+			_packetDeque.push_back(recvPacket);
 		}
 
-		bool IsEmpty() { return _packetDeque.empty(); };
+		bool IsEmpty()
+		{
+			std::lock_guard<std::mutex> lock(_mutex);
+			return _packetDeque.empty(); 
+		};
 
 	private :
 

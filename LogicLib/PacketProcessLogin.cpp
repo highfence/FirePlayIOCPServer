@@ -39,7 +39,7 @@ namespace FirePlayLogic
 		resPkt.ErrorCode = (short)addRet;
 		_logger->Write(LogType::LOG_DEBUG, "%s | AddUser ERROR_CODE(%d)", __FUNCTION__, static_cast<int>(addRet));
 
-		std::shared_ptr<RecvPacketInfo> sendPacket;
+		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
 		sendPacket->SessionIndex = packetInfo->SessionIndex;
 		sendPacket->PacketId = (short)PACKET_ID::LOGIN_IN_RES;
 		sendPacket->PacketBodySize = sizeof(FirePlayCommon::PktLogInRes);

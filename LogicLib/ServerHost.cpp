@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 
+#include "../Common/Define.h"
 #include "../Common/ConsoleLogger.h"
 
 #include "../NetworkLib/IOCPNetwork.h"
@@ -57,6 +58,11 @@ namespace FirePlayLogic
 	void ServerHost::Stop()
 	{
 		_isRun = false;
+
+		delete _recvQueue;
+		_recvQueue = nullptr;
+		delete _sendQueue;
+		_sendQueue = nullptr;
 	}
 
 	ERROR_CODE ServerHost::loadConfig()

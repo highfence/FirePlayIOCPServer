@@ -38,18 +38,17 @@ namespace FirePlayCommon
 		FORCING_CLOSE = 6,
 	};
 
-	class RecvPacketInfo
+	struct RecvPacketInfo
 	{
-	public:
-
-		RecvPacketInfo() {};
+		RecvPacketInfo() = default;
 		~RecvPacketInfo()
 		{
 			if (pData != nullptr)
 			{
 				delete[] pData;
+				pData = nullptr;
 			}
-		};
+		}
 
 		int SessionIndex = 0;
 		short PacketId = 0;

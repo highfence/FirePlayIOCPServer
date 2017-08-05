@@ -49,43 +49,6 @@ namespace FirePlayLogic
 		registFunctions();
 	}
 
-	void PacketProcess::BroadCast(std::shared_ptr<RecvPacketInfo> packetInfo)
-	{
-		auto packetId = packetInfo->PacketId;
-
-		// 들어온 패킷에 해당하는 함수목록을 찾는다.
-		auto subscribedFuctions = _processMap.find(packetId);
-
-		if (subscribedFuctions == _processMap.end())
-		{
-			_logger->Write(LogType::LOG_ERROR, "%s | Invalid packed id input!", __FUNCTION__);
-			return;
-		}
-
-		_logger->Write(LogType::LOG_DEBUG, "%s | PacketId(%d) is BroadCast", __FUNCTION__, static_cast<int>(packetId));
-
-		// 함수목록들을 실행시켜준다.
-		for (auto& function : subscribedFuctions->second)
-		{
-			function(packetInfo);
-			_logger->Write(LogType::LOG_DEBUG, "Some Function ended");
-		}
-	}
-
-	void PacketProcess::Subscribe(short interestedPacketId, PacketFunc functor)
-	{
-		// 해당 패킷아이디로 구독 등록한 다른 친구가 있나 찾아본다.
-		if (_processMap.find(interestedPacketId) == _processMap.end())
-		{
-			// 다른 친구가 없다면, 새로 리스트를 만들어준다.
-			PacketFuncList functionList;
-			_processMap.emplace(interestedPacketId, std::move(functionList));
-		}
-
-		// 해당하는 구독자 리스트에 내 함수를 밀어넣는다.
-		_processMap.find(interestedPacketId)->second.emplace_back(std::move(functor));
-	}
-
 	void PacketProcess::Update()
 	{
 		auto recvPacket = _recvQueue->Peek();
@@ -95,16 +58,27 @@ namespace FirePlayLogic
 			return;
 		}
 
-		BroadCast(recvPacket);
+		// 받은 패킷 아이디에 대응하는 처리 함수가 없는 경우.
+		if (_packetFuncArray[recvPacket->PacketId] == nullptr)
+		{
+			_logger->Write(LogType::LOG_WARN, "%s | There is no function correspond to packet(%d)", __FUNCTION__, recvPacket->PacketId);
+			return;
+		}
+
+		// 대응하는 함수 호출.
+		_packetFuncArray[recvPacket->PacketId];
 	}
 
 	void PacketProcess::registFunctions()
 	{
-		Subscribe((short)FirePlayNetwork::NET_ERROR_CODE::NTF_SYS_CONNECT_SESSION,
-			std::bind(&PacketProcess::ntfSysConnectSession, this, std::placeholders::_1));
+		// 함수 배열 초기화.
+		for (int i = 0; i < (int)PACKET_ID::MAX; ++i)
+		{
+			_packetFuncArray[i] = nullptr;
+		}
 
-		Subscribe((short)FirePlayCommon::PACKET_ID::LOGIN_IN_REQ,
-			std::bind(&PacketProcess::login, this, std::placeholders::_1));
+		_packetFuncArray[(int)NET_LIB_PACKET_ID::NTF_SYS_CONNECT_SESSION] = &PacketProcess::ntfSysConnectSession;
+		_packetFuncArray[(int)PACKET_ID::LOGIN_IN_REQ] = &PacketProcess::login;
 	}
 
 	ERROR_CODE PacketProcess::ntfSysConnectSession(std::shared_ptr<RecvPacketInfo> packetInfo)
