@@ -68,7 +68,7 @@ namespace FirePlayLogic
 
 		// 대응하는 함수 호출.
 		_logger->Write(LogType::LOG_DEBUG, "%s | PacketId(%d) Function Called", __FUNCTION__, recvPacket->PacketId);
-		_packetFuncArray[recvPacket->PacketId];
+		(this->*_packetFuncArray[recvPacket->PacketId])(recvPacket);
 		_recvQueue->Pop();
 	}
 
