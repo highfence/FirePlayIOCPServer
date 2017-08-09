@@ -116,7 +116,42 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::lobbyLeave(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+		FirePlayCommon::PktLobbyLeaveRes resPkt;
+
+		auto leaveUserRet = _userManager->GetUser(packetInfo->SessionIndex);
+		auto errorCode = std::get<0>(leaveUserRet);
+
+		if (errorCode != ERROR_CODE::NONE) {
+			return (errorCode);
+		}
+
+		auto leaveUser = std::get<1>(leaveUserRet);
+
+		if (leaveUser->IsCurStateIsLobby() == false) {
+			return (ERROR_CODE::LOBBY_LEAVE_INVALID_DOMAIN);
+		}
+
+		auto leavedLobby = _lobbyManager->GetLobby(leaveUser->GetLobbyIndex());
+		if (leavedLobby == nullptr) {
+			return (ERROR_CODE::LOBBY_LEAVE_INVALID_LOBBY_INDEX);
+		}
+
+		auto leaveRet = leavedLobby->LeaveUser(leaveUser->GetIndex());
+		if (leaveRet != ERROR_CODE::NONE) {
+			return (leaveRet);
+		}
+
+		leavedLobby->NotifyLobbyLeaveUserInfo(leaveUser);
+
+		//m_pRefNetwork->SendData(packetInfo.SessionIndex, (short)PACKET_ID::LOBBY_LEAVE_RES, sizeof(NCommon::PktLobbyLeaveRes), (char*)&resPkt);
+		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
+		sendPacket->PacketId = (short)PACKET_ID::LOBBY_LEAVE_RES;
+		sendPacket->SessionIndex = leaveUser->GetSessionIdx();
+		sendPacket->PacketBodySize = sizeof(resPkt);
+		sendPacket->pData = new char[sendPacket->PacketBodySize];
+		memcpy(sendPacket->pData, (char*)&resPkt, sendPacket->PacketBodySize);
+
+		return ERROR_CODE::NONE;
 	}
 
 }
