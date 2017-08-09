@@ -188,7 +188,7 @@ namespace FirePlayLogic
 		strncpy_s(pkt.UserID, _countof(pkt.UserID), userId, FirePlayCommon::MAX_USER_ID_SIZE);
 		wcsncpy_s(pkt.Msg, FirePlayCommon::MAX_LOBBY_CHAT_MSG_SIZE + 1, msg, FirePlayCommon::MAX_LOBBY_CHAT_MSG_SIZE);
 
-		sendToAllUser((short)PACKET_ID::LOBBY_CHAT_NTF, sizeof(pkt), (char*)&pkt, sessionIdx);
+		sendToAllUser((short)PACKET_ID::LOBBY_CHAT_NTF, sizeof(pkt), (char*)&pkt);
 	}
 
 	User * Lobby::FindUser(const int userIdx)

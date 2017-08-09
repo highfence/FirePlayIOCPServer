@@ -106,7 +106,40 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::lobbyChat(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+		auto reqPkt = (FirePlayCommon::PktLobbyChatReq*)packetInfo->pData;
+		FirePlayCommon::PktLobbyChatRes resPkt;
+
+		auto chatUserRet = _userManager->GetUser(packetInfo->SessionIndex);
+		auto errorCode = std::get<0>(chatUserRet);
+
+		if (errorCode != ERROR_CODE::NONE) {
+			return (errorCode);
+		}
+
+		auto chatUser = std::get<1>(chatUserRet);
+
+		if (chatUser->IsCurStateIsLobby() == false) {
+			return (ERROR_CODE::LOBBY_CHAT_INVALID_DOMAIN);
+		}
+
+		auto lobbyIndex = chatUser->GetLobbyIndex();
+		auto chatLobby = _lobbyManager->GetLobby(lobbyIndex);
+		if (chatLobby == nullptr) {
+			return (ERROR_CODE::LOBBY_CHAT_INVALID_LOBBY_INDEX);
+		}
+
+		chatLobby->NotifyChat(chatUser->GetSessionIdx(), chatUser->GetId().c_str(), reqPkt->Msg);
+
+		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
+		sendPacket->PacketId = (short)PACKET_ID::LOBBY_CHAT_RES;
+		sendPacket->SessionIndex = chatUser->GetSessionIdx();
+		sendPacket->PacketBodySize = sizeof(resPkt);
+		sendPacket->pData = new char[sendPacket->PacketBodySize];
+		memcpy(sendPacket->pData, (char*)&resPkt, sendPacket->PacketBodySize);
+
+		_sendQueue->Push(sendPacket);
+
+		return ERROR_CODE::NONE;
 	}
 
 	ERROR_CODE PacketProcess::lobbyWisper(std::shared_ptr<RecvPacketInfo> packetInfo)
@@ -143,13 +176,14 @@ namespace FirePlayLogic
 
 		leavedLobby->NotifyLobbyLeaveUserInfo(leaveUser);
 
-		//m_pRefNetwork->SendData(packetInfo.SessionIndex, (short)PACKET_ID::LOBBY_LEAVE_RES, sizeof(NCommon::PktLobbyLeaveRes), (char*)&resPkt);
 		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
 		sendPacket->PacketId = (short)PACKET_ID::LOBBY_LEAVE_RES;
 		sendPacket->SessionIndex = leaveUser->GetSessionIdx();
 		sendPacket->PacketBodySize = sizeof(resPkt);
 		sendPacket->pData = new char[sendPacket->PacketBodySize];
 		memcpy(sendPacket->pData, (char*)&resPkt, sendPacket->PacketBodySize);
+
+		_sendQueue->Push(sendPacket);
 
 		return ERROR_CODE::NONE;
 	}
