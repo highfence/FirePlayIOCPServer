@@ -71,6 +71,7 @@ namespace FirePlayNetwork
 		PacketQueue * _sendPacketQueue;
 
 		size_t _connectedSessionCount = 0;
+		char * _sendBuffer = nullptr;
 
 	public :
 
