@@ -43,5 +43,4 @@ namespace FirePlayLogic
 		std::unordered_map<int, std::shared_ptr<User>> _userSessionDic;
 		std::unordered_map<const char*, std::shared_ptr<User>> _userIDDic;
 	};
-
 }

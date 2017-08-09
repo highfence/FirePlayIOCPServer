@@ -475,11 +475,12 @@ namespace FirePlayNetwork
 				continue;
 			}
 
+			// PacketQueue가 비어있는 경우는 위에서 검사하였으므로 nullptr 검사를 하지 않는다.
 			std::shared_ptr<RecvPacketInfo> sendPacket = _sendPacketQueue->Peek();
+
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
-			//// TODO :: 이부분 char형 할당하지 말고 멤버 변수 버퍼로 가지고 있도록 하기.
 			memcpy(&_sendBuffer[0], (char*)&sendHeader, FirePlayCommon::packetHeaderSize);
 			memcpy(&_sendBuffer[FirePlayCommon::packetHeaderSize], sendPacket->pData, sendPacket->PacketBodySize);
 

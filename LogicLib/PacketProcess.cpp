@@ -80,8 +80,17 @@ namespace FirePlayLogic
 			_packetFuncArray[i] = nullptr;
 		}
 
-		_packetFuncArray[(int)NET_LIB_PACKET_ID::NTF_SYS_CONNECT_SESSION] = &PacketProcess::ntfSysConnectSession;
-		_packetFuncArray[(int)PACKET_ID::LOGIN_IN_REQ] = &PacketProcess::login;
+		_packetFuncArray[(int)NET_LIB_PACKET_ID::NTF_SYS_CONNECT_SESSION  ] = &PacketProcess::ntfSysConnectSession;
+		_packetFuncArray[(int)NET_LIB_PACKET_ID::NTF_SYS_CLOSE_SESSION    ] = &PacketProcess::ntfSysCloseSession;
+		_packetFuncArray[(int)        PACKET_ID::LOGIN_IN_REQ             ] = &PacketProcess::login;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_LIST_REQ           ] = &PacketProcess::lobbyList;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_ENTER_REQ          ] = &PacketProcess::lobbyEnter;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_ENTER_ROOM_LIST_REQ] = &PacketProcess::lobbyRoomList;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_ENTER_USER_LIST_REQ] = &PacketProcess::lobbyUserList;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_CHAT_REQ           ] = &PacketProcess::lobbyChat;
+		_packetFuncArray[(int)        PACKET_ID::LOBBY_LEAVE_REQ          ] = &PacketProcess::lobbyLeave;
+		_packetFuncArray[(int)        PACKET_ID::ROOM_ENTER_REQ           ] = &PacketProcess::roomEnter;
+		_packetFuncArray[(int)        PACKET_ID::ROOM_LEAVE_REQ           ] = &PacketProcess::roomLeave;
 	}
 
 	ERROR_CODE PacketProcess::ntfSysConnectSession(std::shared_ptr<RecvPacketInfo> packetInfo)
@@ -92,7 +101,12 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::ntfSysCloseSession(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE::NONE;
+		auto closeUser = std::get<1>(_userManager->GetUser(packetInfo->SessionIndex));
+
+		if (closeUser != nullptr)
+		{
+
+		}
 	}
 
 

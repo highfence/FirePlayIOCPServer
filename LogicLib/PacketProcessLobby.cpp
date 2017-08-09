@@ -2,7 +2,6 @@
 
 namespace FirePlayLogic
 {
-
 	ERROR_CODE PacketProcess::lobbyEnter(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
 		return ERROR_CODE();
