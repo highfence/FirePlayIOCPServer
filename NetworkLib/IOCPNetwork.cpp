@@ -481,14 +481,22 @@ namespace FirePlayNetwork
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
+			ZeroMemory(_sendBuffer, FirePlayCommon::packetHeaderSize + FirePlayNetwork::maxPacketBodySize);
 			memcpy(&_sendBuffer[0], (char*)&sendHeader, FirePlayCommon::packetHeaderSize);
 			memcpy(&_sendBuffer[FirePlayCommon::packetHeaderSize], sendPacket->pData, sendPacket->PacketBodySize);
 
-			send(destSession._socket, _sendBuffer, FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize, 0);
+			auto retval = send(destSession._socket, _sendBuffer, FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize, 0);
+			if (retval == -1)
+			{
+				_logger->Write(LogType::LOG_ERROR, "%s | Send Function Error!", __FUNCTION__);
+			}
+			else
+			{
+				_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet(%d), To Socket(%I64u), Session(%d), Packet ID(%d)", __FUNCTION__, retval, destSession._socket, destSession._tag, static_cast<int>(sendPacket->PacketId));
+			}
 
 			_sendPacketQueue->Pop();
 			
-			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Session(%d), Packet ID(%d)", __FUNCTION__, destSession._socket, destSession._tag, static_cast<int>(sendPacket->PacketId));
 		}
 
 		// 쓰레드가 끝났을 경우 할당했던 버퍼를 해제 한다.

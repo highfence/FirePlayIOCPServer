@@ -37,6 +37,8 @@ namespace FirePlayLogic
 	void LobbyManager::SendLobbyListInfo(const int sessionIdx)
 	{
 		FirePlayCommon::PktLobbyListRes resPkt;
+		ZeroMemory(&resPkt, sizeof(resPkt));
+
 		resPkt.ErrorCode = (short)ERROR_CODE::NONE;
 		resPkt.LobbyCount = static_cast<short>(_lobbyList.size());
 
@@ -52,8 +54,9 @@ namespace FirePlayLogic
 		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
 		sendPacket->SessionIndex = sessionIdx;
 		sendPacket->PacketId = (short)PACKET_ID::LOBBY_LIST_RES;
-		sendPacket->PacketBodySize = sizeof(resPkt);
-		sendPacket->pData = (char*)&resPkt;
+		sendPacket->PacketBodySize = sizeof(FirePlayCommon::PktLobbyListRes);
+		sendPacket->pData = new char[sendPacket->PacketBodySize];
+		memcpy(sendPacket->pData, (char*)&resPkt, sendPacket->PacketBodySize);
 
 		_sendQueue->Push(sendPacket);
 	}

@@ -46,8 +46,6 @@ namespace FirePlayLogic
 		sendPacket->PacketBodySize = sizeof(FirePlayCommon::PktLogInRes);
 		sendPacket->pData = (char*)&resPkt;
 
-		_logger->Write(LogType::LOG_DEBUG, "%s | Make Send Packet(shared_ptr)", __FUNCTION__);
-
 		_sendQueue->Push(sendPacket);
 		_logger->Write(LogType::LOG_DEBUG, "%s | Push Packet(%d) Session(%d) to SendQueue", __FUNCTION__, sendPacket->PacketId, sendPacket->SessionIndex);
 
