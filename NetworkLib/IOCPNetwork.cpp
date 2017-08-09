@@ -480,8 +480,6 @@ namespace FirePlayNetwork
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
 			//// TODO :: 이부분 char형 할당하지 말고 멤버 변수 버퍼로 가지고 있도록 하기.
-
-			//char * sendBuffer = new char[FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize];
 			memcpy(&_sendBuffer[0], (char*)&sendHeader, FirePlayCommon::packetHeaderSize);
 			memcpy(&_sendBuffer[FirePlayCommon::packetHeaderSize], sendPacket->pData, sendPacket->PacketBodySize);
 
@@ -491,5 +489,8 @@ namespace FirePlayNetwork
 			
 			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Session(%d), Packet ID(%d)", __FUNCTION__, destSession._socket, destSession._tag, static_cast<int>(sendPacket->PacketId));
 		}
+
+		// 쓰레드가 끝났을 경우 할당했던 버퍼를 해제 한다.
+		delete[] _sendBuffer;
 	}
 }
