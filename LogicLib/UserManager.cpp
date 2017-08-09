@@ -19,7 +19,7 @@ namespace FirePlayLogic
 		}
 
 		auto userTag = _userPool.GetTag();
-		auto user = _userPool[userTag];
+		auto& user = _userPool[userTag];
 
 		user.Init(userTag);
 		user.Set(sessionIdx, id);

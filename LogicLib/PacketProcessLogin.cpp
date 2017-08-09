@@ -61,6 +61,7 @@ namespace FirePlayLogic
 
 		if (errorCode != ERROR_CODE::NONE)
 		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | Impossible to find user", __FUNCTION__);
 			return errorCode;
 		}
 
@@ -68,6 +69,7 @@ namespace FirePlayLogic
 
 		if (reqUser->IsCurStateIsLogin() == false)
 		{
+			_logger->Write(LogType::LOG_DEBUG, "%s | User domain is not Login state", __FUNCTION__);
 			return ERROR_CODE::LOBBY_LIST_INVALID_DOMAIN;
 		}
 
