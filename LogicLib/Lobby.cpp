@@ -86,6 +86,8 @@ namespace FirePlayLogic
 		// 유저 정보를 딕셔너리에 저장.
 		_userIdDic.insert({ user->GetId().c_str(), user });
 		_userIdxDic.insert({ user->GetIndex(), user });
+
+		return ERROR_CODE::NONE;
 	}
 
 	ERROR_CODE Lobby::LeaveUser(const int userIdx)

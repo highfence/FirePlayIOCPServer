@@ -64,6 +64,7 @@ namespace FirePlayLogic
 		sendPacket->PacketId = (short)PACKET_ID::LOBBY_ENTER_RES;
 		sendPacket->SessionIndex = enterUser->GetSessionIdx();
 		sendPacket->PacketBodySize = sizeof(resPkt);
+		//sendPacket->pData = (char*)&resPkt;
 		sendPacket->pData = new char[sendPacket->PacketBodySize];
 		memcpy(sendPacket->pData, (char*)&resPkt, sendPacket->PacketBodySize);
 
