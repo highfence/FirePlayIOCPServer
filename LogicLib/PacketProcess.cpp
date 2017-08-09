@@ -12,6 +12,8 @@
 
 #include "UserManager.h"
 #include "ConnectedUserManager.h"
+#include "Lobby.h"
+#include "LobbyManager.h"
 
 namespace FirePlayLogic
 {
@@ -105,6 +107,7 @@ namespace FirePlayLogic
 
 		if (closeUser != nullptr)
 		{
+			auto closeLobby = _lobbyManager->
 
 		}
 	}
