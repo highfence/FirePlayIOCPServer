@@ -112,6 +112,53 @@ namespace FirePlayLogic
 		return ERROR_CODE::NONE;
 	}
 
+	ERROR_CODE Lobby::SendUserList(const int sessionId, const short startUserIndex)
+	{
+		if (startUserIndex < 0 || startUserIndex >= (_userList.size() - 1)) {
+			return ERROR_CODE::LOBBY_USER_LIST_INVALID_START_USER_INDEX;
+		}
+
+		int lastCheckedIndex = 0;
+		FirePlayCommon::PktLobbyUserListRes pktRes;
+		short userCount = 0;
+
+		for (int i = startUserIndex; i < _userList.size(); ++i)
+		{
+			auto& lobbyUser = _userList[i];
+			lastCheckedIndex = i;
+
+			if (lobbyUser.user == nullptr || lobbyUser.user->IsCurStateIsLobby() == false) {
+				continue;
+			}
+
+			pktRes.UserInfo[userCount].LobbyUserIndex = (short)i;
+			strncpy_s(pktRes.UserInfo[userCount].UserID, FirePlayCommon::MAX_USER_ID_SIZE + 1, lobbyUser.user->GetId().c_str(), FirePlayCommon::MAX_USER_ID_SIZE);
+
+			++userCount;
+
+			if (userCount >= FirePlayCommon::MAX_SEND_LOBBY_USER_LIST_COUNT) {
+				break;
+			}
+		}
+
+		pktRes.Count = userCount;
+
+		if (userCount <= 0 || (lastCheckedIndex + 1) == _userList.size()) {
+			pktRes.IsEnd = true;
+		}
+
+		std::shared_ptr<RecvPacketInfo> sendPacket = std::make_shared<RecvPacketInfo>();
+		sendPacket->PacketId = (short)PACKET_ID::LOBBY_ENTER_USER_LIST_RES;
+		sendPacket->SessionIndex = sessionId;
+		sendPacket->PacketBodySize = sizeof(FirePlayCommon::PktLobbyUserListRes);
+		sendPacket->pData = new char[sendPacket->PacketBodySize];
+		memcpy(sendPacket->pData, (char*)&pktRes, sendPacket->PacketBodySize);
+
+		_sendQueue->Push(sendPacket);
+
+		return ERROR_CODE::NONE;
+	}
+
 	short Lobby::GetUserCount()
 	{
 		return static_cast<short>(_userIdxDic.size());
@@ -213,7 +260,8 @@ namespace FirePlayLogic
 			sendPacket->PacketId = packetId;
 			sendPacket->SessionIndex = user->GetSessionIdx();
 			sendPacket->PacketBodySize = dataSize;
-			sendPacket->pData = pData;
+			sendPacket->pData = new char[dataSize];
+			memcpy(sendPacket->pData, pData, dataSize);
 			
 			_sendQueue->Push(sendPacket);
 		}

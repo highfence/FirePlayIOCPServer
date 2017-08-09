@@ -60,6 +60,8 @@ namespace FirePlayLogic
 		ERROR_CODE EnterUser(User* user);
 		ERROR_CODE LeaveUser(const int userIdx);
 
+		ERROR_CODE SendUserList(const int sessionId, const short startUserIndex);
+
 		short GetUserCount();
 
 		void NotifyLobbyEnterUserInfo(User* user);

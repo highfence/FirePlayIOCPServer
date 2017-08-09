@@ -74,12 +74,34 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::lobbyRoomList(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+		return ERROR_CODE::NONE;
 	}
 
 	ERROR_CODE PacketProcess::lobbyUserList(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+		auto reqUserRet = _userManager->GetUser(packetInfo->SessionIndex);
+		auto errorCode = std::get<0>(reqUserRet);
+
+		if (errorCode != ERROR_CODE::NONE) {
+			return (errorCode);
+		}
+
+		auto pUser = std::get<1>(reqUserRet);
+
+		if (pUser->IsCurStateIsLobby() == false) {
+			return (ERROR_CODE::LOBBY_USER_LIST_INVALID_DOMAIN);
+		}
+
+		auto pLobby = _lobbyManager->GetLobby(pUser->GetLobbyIndex());
+		if (pLobby == nullptr) {
+			return (ERROR_CODE::LOBBY_USER_LIST_INVALID_LOBBY_INDEX);
+		}
+
+		auto reqPkt = (FirePlayCommon::PktLobbyUserListReq*)packetInfo->pData;
+
+		pLobby->SendUserList(pUser->GetSessionIdx(), reqPkt->StartUserIndex);
+
+		return ERROR_CODE::NONE;
 	}
 
 	ERROR_CODE PacketProcess::lobbyChat(std::shared_ptr<RecvPacketInfo> packetInfo)
