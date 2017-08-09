@@ -471,21 +471,24 @@ namespace FirePlayNetwork
 				continue;
 			}
 
-			_logger->Write(LogType::LOG_DEBUG, "%s | SendThreadFunc Entry", __FUNCTION__);
-
 			std::shared_ptr<RecvPacketInfo> sendPacket = _sendPacketQueue->Peek();
 			auto destSession = _sessionPool[sendPacket->SessionIndex];
 			auto sendHeader = PktHeader{ sendPacket->PacketId, sendPacket->PacketBodySize };
 			
-			char* sendChar = (char*)&sendHeader; 
-			strcat(sendChar, sendPacket->pData);
-
-			send(destSession._socket, sendChar, FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize, 0);
-
 			//send(destSession._socket, (char*)&sendHeader, FirePlayCommon::packetHeaderSize, 0);
 			//send(destSession._socket, sendPacket->pData, sendPacket->PacketBodySize, 0);
 
+			// TODO :: 이부분 char형 할당하지 말고 멤버 변수 버퍼로 가지고 있도록 하기.
+
+			char * sendBuffer = new char[FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize];
+			memcpy(&sendBuffer[0], (char*)&sendHeader, FirePlayCommon::packetHeaderSize);
+			memcpy(&sendBuffer[FirePlayCommon::packetHeaderSize], sendPacket->pData, sendPacket->PacketBodySize);
+
+			send(destSession._socket, sendBuffer, FirePlayCommon::packetHeaderSize + sendPacket->PacketBodySize, 0);
+
 			_sendPacketQueue->Pop();
+
+			delete[] sendBuffer;
 			
 			_logger->Write(LogType::LOG_DEBUG, "%s | Send Packet, To Socket(%I64u), Session(%d), Packet ID(%d)", __FUNCTION__, destSession._socket, destSession._tag, static_cast<int>(sendPacket->PacketId));
 		}
