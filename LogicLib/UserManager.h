@@ -30,17 +30,17 @@ namespace FirePlayLogic
 		ERROR_CODE AddUser(const int sessionIdx, const char * id);
 		ERROR_CODE RemoveUser(const int sessionIdx);
 
-		std::tuple<ERROR_CODE, std::shared_ptr<User>> GetUser(const int sessionIdx);
+		std::tuple<ERROR_CODE, User*> GetUser(const int sessionIdx);
 
 	private :
 
-		std::shared_ptr<User> findUser(const int sessionIdx);
-		std::shared_ptr<User> findUser(const char * id);
+		User * findUser(const int sessionIdx);
+		User * findUser(const char * id);
 		
 	private :
 
 		UserPool _userPool;
-		std::unordered_map<int, std::shared_ptr<User>> _userSessionDic;
-		std::unordered_map<const char*, std::shared_ptr<User>> _userIDDic;
+		std::unordered_map<int, User*> _userSessionDic;
+		std::unordered_map<const char*, User*> _userIDDic;
 	};
 }

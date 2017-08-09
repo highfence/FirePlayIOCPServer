@@ -24,8 +24,8 @@ namespace FirePlayLogic
 		user.Init(userTag);
 		user.Set(sessionIdx, id);
 
-		_userSessionDic.insert({ sessionIdx, std::make_shared<User>(user) });
-		_userIDDic.insert({ id, std::make_shared<User>(user) });
+		_userSessionDic.insert({ sessionIdx, &user });
+		_userIDDic.insert({ id, &user });
 
 		return ERROR_CODE::NONE;
 	}
@@ -50,7 +50,7 @@ namespace FirePlayLogic
 		return ERROR_CODE::NONE;
 	}
 
-	std::tuple<ERROR_CODE, std::shared_ptr<User>> UserManager::GetUser(const int sessionIdx)
+	std::tuple<ERROR_CODE, User*> UserManager::GetUser(const int sessionIdx)
 	{
 		auto destUser = findUser(sessionIdx);
 
@@ -67,7 +67,7 @@ namespace FirePlayLogic
 		return { ERROR_CODE::NONE, destUser };
 	}
 
-	std::shared_ptr<User> UserManager::findUser(const int sessionIdx)
+	User * UserManager::findUser(const int sessionIdx)
 	{
 		auto findUser = _userSessionDic.find(sessionIdx);
 
@@ -79,7 +79,7 @@ namespace FirePlayLogic
 		return findUser->second;
 	}
 
-	std::shared_ptr<User> UserManager::findUser(const char * id)
+	User * UserManager::findUser(const char * id)
 	{
 		auto findUser = _userIDDic.find(id);
 
