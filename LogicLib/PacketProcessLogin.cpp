@@ -12,6 +12,7 @@
 
 #include "ConnectedUserManager.h"
 #include "UserManager.h"
+#include "LobbyManager.h"
 
 using PACKET_ID = FirePlayCommon::PACKET_ID;
 using LogType = FirePlayCommon::LogType;
@@ -55,6 +56,23 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::lobbyList(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		return ERROR_CODE();
+		auto reqUserRet = _userManager->GetUser(packetInfo->SessionIndex);
+		auto errorCode = std::get<0>(reqUserRet);
+
+		if (errorCode != ERROR_CODE::NONE)
+		{
+			return errorCode;
+		}
+
+		auto reqUser = std::get<1>(reqUserRet);
+
+		if (reqUser->IsCurStateIsLogin() == false)
+		{
+			return ERROR_CODE::LOBBY_LIST_INVALID_DOMAIN;
+		}
+
+		_lobbyManager->SendLobbyListInfo(packetInfo->SessionIndex);
+
+		return ERROR_CODE::NONE;
 	}
 }

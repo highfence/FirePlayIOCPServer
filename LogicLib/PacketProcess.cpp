@@ -103,13 +103,8 @@ namespace FirePlayLogic
 
 	ERROR_CODE PacketProcess::ntfSysCloseSession(std::shared_ptr<RecvPacketInfo> packetInfo)
 	{
-		auto closeUser = std::get<1>(_userManager->GetUser(packetInfo->SessionIndex));
-
-		if (closeUser != nullptr)
-		{
-			auto closeLobby = _lobbyManager->
-
-		}
+		// TODO :: 구현 필요.
+		return ERROR_CODE::NONE;
 	}
 
 

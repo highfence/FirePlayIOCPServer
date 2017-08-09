@@ -176,7 +176,7 @@ namespace FirePlayLogic
 	{
 		// 제거하려는 user가 있나 확인.
 		auto findUser = std::find_if(std::begin(_userList), std::end(_userList),
-			[userIdx](auto& lobbyUser) { return lobbyUser.user != nullptr && lobbyUser.user->GetIndex() = userIdx; });
+			[userIdx](LobbyUser& lobbyUser) { return (lobbyUser.user != nullptr) && (lobbyUser.user->GetIndex() == userIdx); });
 
 		// 없다면 그냥 리턴.
 		if (findUser == std::end(_userList))

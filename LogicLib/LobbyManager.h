@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "../NetworkLib/PacketQueue.h"
+#include "Lobby.h"
 
 namespace FirePlayCommon
 {
@@ -27,8 +28,6 @@ namespace FirePlayLogic
 
 	using PacketQueue = FirePlayNetwork::PacketQueue;
 	using ConsoleLogger = FirePlayCommon::ConsoleLogger;
-
-	class Lobby;
 
 	class LobbyManager
 	{

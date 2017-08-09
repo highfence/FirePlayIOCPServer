@@ -38,6 +38,14 @@ namespace FirePlayLogic
 		_userManager = std::make_unique<UserManager>();
 		_userManager->Init(_serverInfo->MaxClientCount);
 
+		// 로비 매니저 생성.
+		_lobbyManager = std::make_unique<LobbyManager>();
+		_lobbyManager->Init({ _serverInfo->MaxLobbyCount,
+							  _serverInfo->MaxLobbyUserCount,
+							  _serverInfo->MaxRoomCountByLobby,
+							  _serverInfo->MaxRoomUserCount },
+							  _sendQueue, _logger.get());
+
 		// 패킷 프로세스 생성.
 		//_packetProcess = std::make_unique<PacketProcess>(PacketProcess::Factory::Create(_logger.get(), _userManager.get(), _lobbyManager.get(), _recvQueue.get(), _sendQueue.get()));
 		_packetProcess = std::make_unique<PacketProcess>();
